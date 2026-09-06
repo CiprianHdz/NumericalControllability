@@ -65,26 +65,34 @@ relative to `hum_frontera_2.py` as written; the discrepancy is documented in
 ## Excluded — broken or abandoned (left in `RawCode/`, not migrated)
 
 Re-verified directly against `RawCode/` source and the thesis's own Appendix B
-pseudocode (Algorithms 4 & 5, eq. B.10–B.15, pp. 88–89) — see "Thesis cross-check"
-below each bullet. Confirmed: none of the three is a fixable/distinct algorithm, so
-none is revived even where the bug itself is trivial to patch.
+pseudocode for **all five** Algorithms 1–5, pp. 86–89 (Algorithm 1: generic CG
+method for variational problems; Algorithm 2: Boundary Grammian helper; Algorithm 3:
+internal-control HUM, eq. B.6–B.9; Algorithm 4: HUM1 boundary control, eq. B.10–B.11;
+Algorithm 5: HUM2 boundary control, eq. B.12–B.15) — see "Thesis cross-check" below
+each bullet. Confirmed: none of the three excluded items is a fixable/distinct
+algorithm, so none is revived even where the bug itself is trivial to patch. In
+particular, **no algorithm among 1–5 ever measures the CG iterate in H⁻¹** — Algorithm
+1 uses a generic abstract `‖·‖` on `H`, Algorithm 3 uses plain L²(Ω), Algorithm 4 uses
+H¹₀, Algorithm 5 uses L²(0,T) — so `HUM_frontera.py`'s H⁻¹-norm choice (both its
+functions) cannot be traced to any of the thesis's five algorithms, exact or
+penalized.
 
 - **`RawCode/HUM_frontera.py`, `HUM2()`** — H⁻¹-norm boundary variant iterating the
   adjoint datum f. Its `gramiano()` helper returns a variable `sol_u` that is never
   assigned inside the function → calling it raises `NameError`. This is exactly what
   the file's own `test_single()` calls, so **this script cannot run to completion as
   written**.
-  *Thesis cross-check:* Algorithm 4's pseudocode (B.10–B.11) iterates the CG in
-  **H¹₀** exclusively (`‖g‖²_{H¹₀}` in the step-size, stopping-criterion, and γₙ
-  formulas) — H⁻¹ never appears in the boundary-control pseudocode. So fixing the
-  `NameError` alone would not recover Algorithm 4; it would still be a wrong-norm
-  variant, already superseded by the canonical H¹₀ implementation in
+  *Thesis cross-check:* the only boundary-control algorithms in the thesis are
+  Algorithm 4 (H¹₀, eq. B.10–B.11: `‖g‖²_{H¹₀}` in the step-size, stopping-criterion,
+  and γₙ formulas) and Algorithm 5 (L²(0,T), eq. B.12–B.15) — neither uses H⁻¹. So
+  fixing the `NameError` alone would not recover either algorithm; it would still be
+  a wrong-norm variant, already superseded by the canonical H¹₀ implementation in
   `HUM_boundary_modified.py`.
 - **`RawCode/HUM_frontera.py`, `HUM()` ("Algoritmo 2.5")** — H⁻¹-norm, also iterates
   f, but computes `g0 = (1/ε)·f0 + (Ah)⁻¹y(T)` — **dividing** by ε rather than
   multiplying, inconsistent with every other working file's convention. Never
   actually called by this file's own `test_single()` — dead code.
-  *Thesis cross-check:* same H⁻¹/H¹₀ mismatch as `HUM2()` above against Algorithm 4's
+  *Thesis cross-check:* same H⁻¹ mismatch as `HUM2()` above against Algorithm 4's
   `g⁰ = εf⁰ − (Ah)⁻¹y(T)` (B.10, multiplicative) — no fix recovers a distinct
   algorithm here either.
 - **`RawCode/Boundary_Control_Heat_Euler_Penalizacion.ipynb`** — attempts a
