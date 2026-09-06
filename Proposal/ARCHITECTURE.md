@@ -57,19 +57,15 @@ NumericalControllability/
     │   ├── diagnostics/
     │   │   ├── functionals.py                 # J()/J_eps() dual, F_primal()/F_primal_eps() primal
     │   │   ├── duality_check.py                # Fε(v̂) ≈ -Jε(ĝ) sanity check (Eq. 2.27)
-    │   │   └── exact_solution.py               # y_e(x,t)=10e^{-απ²t}sin(πx) comparison
+    │   │   └── exact_solution.py               # y_e generalized over InitialCondition + domain
     │   └── results.py                          # RunResult: git_commit, timestamp, config snapshot
     ├── runs/                                    # git-tracked JSON run logs written by main.py
     │   └── .gitkeep
     ├── tests/                                   # pytest, mirrors src/hum/
     └── examples/
         └── configs/                             # example JSON configs consumed by main.py
-            ├── thesis_eq427_internal_exact.json
-            ├── thesis_eq427_internal_penalized.json
-            ├── thesis_eq427_hum1_exact.json
-            ├── thesis_eq427_hum1_penalized.json
-            ├── thesis_eq427_hum2_penalized.json
-            └── scheme_robustness_demo.json
+            ├── internal_control.json           # Algorithm 3; every field varies in place
+            └── boundary_control.json           # Algorithm 4 or 5, via boundary_variant
 ```
 
 ## Module responsibilities (one line each)
@@ -108,11 +104,13 @@ NumericalControllability/
   paths; also builds on `gramian.py`.
 - `optimization/hum2_boundary.py` — Algorithm 5 (thesis p.89), penalized only, with
   the confirmed zero-IC bug fixed relative to `RawCode/hum_frontera_2.py`.
-- `problem.py` — `HeatProblem`, the config schema.
+- `problem.py` — `HeatProblem`, the config schema, plus `InitialCondition` (the small
+  JSON-representable IC spec) and its resolver `make_initial_condition`.
 - `diagnostics/functionals.py` — dual/primal functional evaluation.
 - `diagnostics/duality_check.py` — Fenchel–Rockafellar sanity check (Eq. 2.27).
 - `diagnostics/exact_solution.py` — the closed-form uncontrolled solution used for
-  validation.
+  validation; generalized over `InitialCondition`'s sine family and the domain
+  `(L_i, L_s)`, not hardcoded to the thesis's own `10·sin(πx)` on `(0,1)`.
 - `results.py` — `RunResult`, the traceability record.
 
 ## Fixed interface contracts
@@ -193,27 +191,58 @@ def linear_cg(
 One shared numerical kernel; `hum_internal`/`hum1_boundary`/`hum2_boundary` each
 supply their own `apply_operator`/`rhs` construction — never a copy-pasted CG loop.
 
+### `InitialCondition` (`problem.py`)
+
+```python
+@dataclass(frozen=True)
+class InitialCondition:
+    kind: Literal["sine"]      # single supported kind for now; extensible later
+                                 # without touching HeatProblem or any solver
+    amplitude: float
+    mode: int                   # k in amplitude * sin(k*pi*(x - L_i) / L), L = L_s - L_i
+
+def make_initial_condition(
+    spec: InitialCondition, interval: tuple[float, float]
+) -> Callable[[np.ndarray], np.ndarray]:
+    """Resolves a JSON-representable IC spec into the callable every solve and
+    diagnostics/exact_solution.py consume. `sine` generalizes the thesis's
+    I(x) = 10*sin(pi*x) (amplitude=10, mode=1, on (0,1)) to any domain, amplitude,
+    and mode — for every choice it stays a genuine Dirichlet eigenfunction of
+    -d^2/dx^2 on (L_i, L_s), which is exactly what keeps exact_solution.py's closed
+    form y_e(x,t) = amplitude * exp(-alpha*(k*pi/L)^2*t) * sin(k*pi*(x-L_i)/L) valid
+    for every config, not just the thesis's own numbers."""
+```
+
+This replaces a raw `Callable` in `HeatProblem`, which was never actually
+JSON-representable despite the doc's own claim below — `InitialCondition` is what
+makes "vary the initial condition from the config file" possible at all.
+
 ### `HeatProblem` (`problem.py`)
 
 ```python
 @dataclass(frozen=True)
 class HeatProblem:
-    alpha: float
-    interval: tuple[float, float]
-    T: float
+    alpha: float                        # diffusion coefficient
+    interval: tuple[float, float]       # (L_i, L_s); domain [0, L] is the L_i=0 case
+    T: float                            # controllability horizon
     n_space: int
     n_time: int
     control_type: Literal["internal", "boundary"]
     control_region: tuple[float, float] | Literal["right", "left", "both"]
+    boundary_variant: Literal["hum1", "hum2"] | None  # read only when control_type="boundary"
     scheme: Literal["explicit_euler", "implicit_euler", "rk4"]
     eps: float | None          # None => structurally exact variant
     tol: float
     max_iter: int
-    initial_condition: Callable[[np.ndarray], np.ndarray]
+    initial_condition: InitialCondition
 ```
 
-This is both the internal config object and the JSON schema `main.py` reads.
-`hum2_boundary` raises a clear error if `eps` is `None` or `0`.
+This is both the internal config object and the JSON schema `main.py` reads — every
+field, `initial_condition` and `boundary_variant` included, is now JSON-representable,
+so an example config can vary all of them by editing values, no code change needed.
+`hum2_boundary` raises a clear error if `eps` is `None` or `0`; `boundary_variant`
+picks Algorithm 4 (`hum1`, exact or penalized) vs. Algorithm 5 (`hum2`, penalized
+only) and is ignored for `control_type="internal"`.
 
 ### `RunResult` (`results.py`)
 
@@ -236,3 +265,60 @@ class RunResult:
 ```
 
 JSON-serializable; written to `runs/<timestamp>_<commit>.json` by `main.py`.
+
+## Example configs
+
+Exactly two, one per `control_type` — every `HeatProblem` field above is present and
+editable in place, so varying diffusion (`alpha`), domain (`interval`), initial
+condition, or any other parameter never requires touching code. Defaults use the
+thesis's own `10·sin(πx)` initial condition and `(0,1)` domain (Ch. 4's running
+example), so a fresh clone reproduces a thesis-comparable run out of the box.
+
+`examples/configs/internal_control.json` (Algorithm 3):
+
+```json
+{
+  "alpha": 1.0,
+  "interval": [0.0, 1.0],
+  "T": 1.0,
+  "n_space": 50,
+  "n_time": 200,
+  "control_type": "internal",
+  "control_region": [0.3, 0.8],
+  "boundary_variant": null,
+  "scheme": "implicit_euler",
+  "eps": null,
+  "tol": 1e-6,
+  "max_iter": 200,
+  "initial_condition": {"kind": "sine", "amplitude": 10.0, "mode": 1}
+}
+```
+
+`examples/configs/boundary_control.json` (Algorithm 4 by default; flip
+`boundary_variant` to `"hum2"` for Algorithm 5 — and give `eps` a numeric value when
+doing so, since HUM2 rejects `null`):
+
+```json
+{
+  "alpha": 1.0,
+  "interval": [0.0, 1.0],
+  "T": 1.0,
+  "n_space": 50,
+  "n_time": 200,
+  "control_type": "boundary",
+  "control_region": "right",
+  "boundary_variant": "hum1",
+  "scheme": "implicit_euler",
+  "eps": null,
+  "tol": 1e-6,
+  "max_iter": 200,
+  "initial_condition": {"kind": "sine", "amplitude": 10.0, "mode": 1}
+}
+```
+
+`control_region` means different things per `control_type`: an internal control
+sub-interval `ω ⊂ (L_i, L_s)` (must lie inside `interval`; `main.py` validates this),
+or which boundary side is actuated. `eps` set to a float rather than `null` switches
+`internal_control.json` to Algorithm 3's penalized path, or `boundary_control.json`
+to HUM1's penalized path — the exact/penalized split that used to be five separate
+files is now this one field.
