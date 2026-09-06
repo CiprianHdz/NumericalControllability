@@ -1,7 +1,9 @@
 # Architecture
 
 Fixed reference for the HUM baseline codebase. Any structural change to the tree or
-the interface contracts below is a diff to this file first, code second.
+the interface contracts below is a diff to this file first, code second. **Nothing
+in this document has been scaffolded yet** — it is a proposal to be finalized here,
+then executed as a separate, explicit step.
 
 This document (and `ALGORITHMS.md`) live in `Proposal/` alongside the research plan
 and dossier, not inside `HUM Code/` itself — they are project/planning documents
@@ -13,6 +15,30 @@ inventory. `SourceDocuments/Glowinski_and_numerical_control_problems.pdf` is cit
 background literature only — it does not cover boundary control or CG-based HUM and
 is not implemented here.
 
+**Revision note:** this replaces an earlier, heavier design (a JSON-config-driven
+`src/hum/` axis-split with `HeatProblem`/`InitialCondition`/`RunResult` dataclasses
+and an `examples/configs/*.json` pair) with the leaner design below, per an explicit
+decision to start fresh with something simplistic and scalable for running
+experiments — not a maintained software product. See "Deferred" at the end for what
+that dropped, and why it isn't lost.
+
+## Design principles
+
+- This is a single-researcher thesis/PhD codebase. Its job right now is executing
+  experiments and reading off numbers, not serving external users or surviving
+  arbitrary future requirements — so JSON config schemas, run-traceability
+  databases, and protocol/dataclass layers are premature until the baseline itself
+  is trusted.
+- It still keeps **one** shared CG engine and **one** norms module across every HUM
+  variant. This is not optional simplicity — it is the direct defense against
+  `RawCode/`'s actual, confirmed failure mode (`Proposal/ALGORITHMS.md`'s "Excluded"
+  section: copy-pasted CG loops, one file dividing by `ε` where every other
+  multiplies, a wrong norm space). Collapsing to fully inline, per-script algorithm
+  code would reproduce that failure mode by construction.
+- Scoped deliberately narrow right now — `research_plan.pdf`'s own "first
+  experiment" (quoted below), not the dossier's full ~123-configuration protocol.
+  Everything wider is listed under "Deferred," not silently dropped.
+
 ## Directory tree
 
 ```
@@ -20,305 +46,225 @@ NumericalControllability/
 ├── RawCode/                        (untouched, historical reference)
 ├── Proposal/, SourceThesis/, SourceDocuments/   (untouched)
 ├── .gitignore                      (repo root)
-├── Proposal/
-│   ├── numerical_controllability_research_plan.pdf
-│   ├── numerical_controllability_dossier_revised.pdf
-│   ├── ARCHITECTURE.md         # this file
-│   └── ALGORITHMS.md           # algorithm inventory, manual sign-off checkpoint
 └── HUM Code/
-    ├── pyproject.toml
-    ├── README.md                   # traceability doc: thesis alg/eq ↔ module map;
-    │                               #   also documents the 3 excluded broken/abandoned files
-    ├── WORKFLOW.md                 # the manual: how to run, branch, track results
-    ├── main.py                     # THE MAIN APP — single entry point, config-driven
-    ├── src/hum/
+    ├── hum/
     │   ├── __init__.py
-    │   ├── discretization/                    # AXIS 1: space grid + control operators
-    │   │   ├── grid.py                        # 1D uniform grid (space + time)
-    │   │   ├── operators.py                   # Laplacian Ah, dense now / sparse seam later
-    │   │   └── control_operators.py           # Bh: internal (indicator on ω) / boundary (1- or 2-sided)
-    │   ├── solvers/                            # AXIS 2: ODE/time integration
-    │   │   ├── base.py                        # TimeScheme protocol
-    │   │   ├── explicit_euler.py
-    │   │   ├── implicit_euler.py              # DEFAULT
-    │   │   ├── rk4.py
-    │   │   ├── factory.py                     # get_scheme(name) — config-driven selection
-    │   │   └── pde.py                         # forward_solve / adjoint_solve, scheme-agnostic
-    │   ├── optimization/                       # AXIS 3: CG engine + norms + HUM variants
-    │   │   ├── norms.py                       # L2Norm, H10Norm, HInvNorm (cached factorization)
-    │   │   ├── gramian.py                     # Algorithm 2, generalized: shared by
-    │   │   │                                  #   hum_internal.py AND hum1_boundary.py
-    │   │   ├── linear_cg.py                   # ONE generic CG engine, preconditioner seam
-    │   │   ├── result.py                      # CGResult: n_iter, converged, residual_history
-    │   │   ├── hum_internal.py                # Algorithm 3 — exact + penalized (eps=None|float)
-    │   │   ├── hum1_boundary.py               # Algorithm 4 — exact + penalized (eps=None|float)
-    │   │   └── hum2_boundary.py               # Algorithm 5 — penalized only; bug-fixed here
-    │   ├── problem.py                          # HeatProblem config dataclass (main.py's schema)
-    │   ├── diagnostics/
-    │   │   ├── functionals.py                 # J()/J_eps() dual, F_primal()/F_primal_eps() primal
-    │   │   ├── duality_check.py                # Fε(v̂) ≈ -Jε(ĝ) sanity check (Eq. 2.27)
-    │   │   └── exact_solution.py               # y_e generalized over InitialCondition + domain
-    │   └── results.py                          # RunResult: git_commit, timestamp, config snapshot
-    ├── runs/                                    # git-tracked JSON run logs written by main.py
-    │   └── .gitkeep
-    ├── tests/                                   # pytest, mirrors src/hum/
-    └── examples/
-        └── configs/                             # example JSON configs consumed by main.py
-            ├── internal_control.json           # Algorithm 3; every field varies in place
-            └── boundary_control.json           # Algorithm 4 or 5, via boundary_variant
+    │   ├── discretization.py       # grid, Laplacian Ah, control operator Bh (internal/boundary)
+    │   ├── solvers.py              # explicit/implicit Euler + RK4, forward & backward solves
+    │   ├── norms.py                # L2, H10 (no H^-1 -- confirmed unused by any of the 5 algorithms)
+    │   ├── algorithms.py           # one shared CG loop + apply_gramian (Alg 2) + hum_internal (Alg 3);
+    │   │                           #   hum1_boundary/hum2_boundary designed, deferred (see below)
+    │   └── diagnostics.py          # spectrum, closed-form exact solution, the standard plot set
+    ├── run_experiment.py           # single-experiment runner: plain params, # %% cells
+    ├── run_all_experiments.py      # batch runner: the concrete experiment list, appends to runs_summary.csv
+    └── runs_summary.csv            # accumulated per-run summaries (git-tracked)
 ```
+
+No `pyproject.toml`, no packaging, no `tests/`, no `README.md`/`WORKFLOW.md`, no
+`examples/configs/`. `hum/` is imported directly (both scripts live next to it), no
+`pip install` step.
 
 ## Module responsibilities (one line each)
 
-- `main.py` — single, config-file-driven entry point. Reads a JSON config into a
-  `HeatProblem`, dispatches to the right algorithm + scheme, runs it, writes a
-  git-commit-tagged `RunResult` to `runs/`.
-- `discretization/grid.py` — builds the 1D uniform space grid and the time grid.
-- `discretization/operators.py` — assembles the discrete Laplacian `Ah`.
-- `discretization/control_operators.py` — assembles the control operator `Bh`, for
-  internal (indicator over ω) or boundary (one- or two-sided) control.
-- `solvers/base.py` — `TimeScheme` protocol shared by forward (primal) and backward
-  (adjoint) solves.
-- `solvers/explicit_euler.py`, `solvers/implicit_euler.py`, `solvers/rk4.py` —
-  concrete `TimeScheme` implementations.
-- `solvers/factory.py` — `get_scheme(name)`, the one place a scheme name is mapped to
-  an implementation.
-- `solvers/pde.py` — `forward_solve`/`adjoint_solve`; loops over the time grid,
-  never references a concrete scheme by name.
-- `optimization/norms.py` — `Norm` protocol + `L2Norm`, `H10Norm`, `HInvNorm`.
-- `optimization/gramian.py` — Algorithm 2 (thesis p.86), **generalized**: apply the
-  Gramian once (adjoint backward solve with datum → control via `Bh` → primal forward
-  solve), control-type-agnostic — `Bh` (from `discretization/control_operators.py`)
-  already carries whatever distinguishes internal from boundary control (operator
-  identity, any scaling). This is the same three-step recipe Algorithm 3's Step 0 and
-  per-iteration step (eq. B.6–B.9) use inline without naming it — so it's shared by
-  both `hum_internal.py` (Algorithm 3) and `hum1_boundary.py` (Algorithm 4).
-  **Not** used by `hum2_boundary.py` (Algorithm 5): its solve order is forward-first
-  then backward (eq. B.12–B.15), structurally different from the Gramian recipe.
-- `optimization/linear_cg.py` — the one generic CG kernel shared by every HUM variant.
-- `optimization/result.py` — `CGResult` (iteration count, convergence flag, residual
-  history).
-- `optimization/hum_internal.py` — Algorithm 3 (thesis p.87), exact and penalized
-  paths; builds its `apply_operator`/`rhs` for `linear_cg` on top of `gramian.py`.
-- `optimization/hum1_boundary.py` — Algorithm 4 (thesis p.88), exact and penalized
-  paths; also builds on `gramian.py`.
-- `optimization/hum2_boundary.py` — Algorithm 5 (thesis p.89), penalized only, with
-  the confirmed zero-IC bug fixed relative to `RawCode/hum_frontera_2.py`.
-- `problem.py` — `HeatProblem`, the config schema, plus `InitialCondition` (the small
-  JSON-representable IC spec) and its resolver `make_initial_condition`.
-- `diagnostics/functionals.py` — dual/primal functional evaluation.
-- `diagnostics/duality_check.py` — Fenchel–Rockafellar sanity check (Eq. 2.27).
-- `diagnostics/exact_solution.py` — the closed-form uncontrolled solution used for
-  validation; generalized over `InitialCondition`'s sine family and the domain
-  `(L_i, L_s)`, not hardcoded to the thesis's own `10·sin(πx)` on `(0,1)`.
-- `results.py` — `RunResult`, the traceability record.
+- `hum/discretization.py` — `build_grid`, the discrete Laplacian `Ah`, and `Bh` for
+  internal (indicator over `ω`) or boundary (one-sided) control.
+- `hum/solvers.py` — `forward_solve`/`backward_solve`, scheme selected by name
+  (`"implicit_euler"` default, `"explicit_euler"`, `"rk4"`).
+- `hum/norms.py` — `l2_norm`/`l2_inner` (Algorithm 3), `h10_norm`/`h10_inner`
+  (Algorithm 4, for when boundary control is implemented).
+- `hum/algorithms.py` — `linear_cg` (the one generic CG engine), `apply_gramian`
+  (Algorithm 2, generalized — shared by internal and, later, HUM1 boundary control),
+  `hum_internal` (Algorithm 3, implemented), `hum1_boundary`/`hum2_boundary`
+  (Algorithms 4/5, designed but raise `NotImplementedError` until a boundary
+  experiment is scoped).
+- `hum/diagnostics.py` — `spectrum`/`condition_number`, `exact_solution_sine`, and
+  the plot set: state snapshots, control profile, CG convergence curve.
+- `run_experiment.py` — `run(...)`: builds the discretization, calls `hum_internal`,
+  computes every summary metric, optionally plots, returns the summary dict.
+- `run_all_experiments.py` — imports `run` and calls it once per experiment in the
+  list, appending each summary to `runs_summary.csv`.
 
 ## Fixed interface contracts
 
-### `TimeScheme` (`solvers/base.py`)
+### `hum/discretization.py`
 
 ```python
-class TimeScheme(Protocol):
-    name: ClassVar[str]
+def build_grid(interval: tuple[float, float], n_space: int, n_time: int, T: float) -> tuple[np.ndarray, np.ndarray, float, float]:
+    """Returns (x, t, h, tau). x has n_space+1 points including both boundaries."""
 
-    def step_forward(self, y: np.ndarray, A: np.ndarray, Bv: np.ndarray, tau: float) -> np.ndarray:
-        """One step of y' = A y + Bv (primal, forward-in-time)."""
+def laplacian(n_interior: int, alpha: float, h: float) -> np.ndarray:
+    """Ah = alpha * (discrete d^2/dx^2) on the interior nodes. Already has the
+    correct sign for y' = Ah y + Bu (RawCode's own comment: "w/o the minus") --
+    symmetric negative semi-definite."""
 
-    def step_backward(self, phi: np.ndarray, A: np.ndarray, tau: float) -> np.ndarray:
-        """One step of -phi' = A^T phi, integrated backward-in-time (adjoint)."""
+def control_operator_internal(x_interior: np.ndarray, omega: tuple[float, float]) -> np.ndarray:
+    """Diagonal indicator matrix on omega, shape (n_interior, n_interior)."""
 
-    def stability_note(self, A: np.ndarray, tau: float) -> str | None:
-        """Advisory CFL-type warning, or None. Never raises."""
+def control_operator_boundary(n_interior: int, alpha: float, h: float, side: str = "right") -> np.ndarray:
+    """Single control channel at one boundary node, shape (n_interior, 1) -- kept
+    2-D like the internal case so apply_gramian treats both uniformly:
+    u = B^T . phi, forcing = B . u. "both" (two-sided) is a future extension."""
 ```
 
-Concrete: `ExplicitEuler`, `ImplicitEuler` (default; canonical
-`np.linalg.solve(I - tau*A, ...)` form), `RK4` (Butcher tableau, thesis Appendix
-B.1.2).
-
-### `Norm` (`optimization/norms.py`)
+### `hum/solvers.py`
 
 ```python
-class Norm(Protocol):
-    def norm(self, x: np.ndarray) -> float: ...
-    def inner(self, x: np.ndarray, y: np.ndarray) -> float: ...
+def forward_solve(y0: np.ndarray, A: np.ndarray, B: np.ndarray, u: np.ndarray, tau: float, scheme: str = "implicit_euler") -> np.ndarray:
+    """y' = A y + B u(t), y(0) = y0. Returns y, shape (n_time, len(y0))."""
+
+def backward_solve(fT: np.ndarray, A: np.ndarray, tau: float, n_time: int, scheme: str = "implicit_euler") -> np.ndarray:
+    """The adjoint -phi' = A^T phi, phi(T) = fT, backward in time."""
 ```
 
-Concrete: `L2Norm(h)`, `H10Norm(A, h)` (canonical quadratic form
-`sqrt(h·xᵀAx)`), `HInvNorm(A, h)` (factorizes `A` once at construction, reused across
-every CG iteration).
+**Sign-convention note (verified against RawCode, easy to get wrong):**
+`backward_solve` steps with `+A` directly, not `A.T` and not `-A`. `Ah` is always
+symmetric here, and the time reversal `s = T - t` turns the backward adjoint problem
+into a *forward* problem in `s` with the *same* operator `A`
+(`d(phi)/ds = A phi`) — this is exactly what every canonical RawCode file's
+`BackwardEuler_b` does (e.g. `HUM_boundary_modified.py`), and it must be reproduced
+exactly, not "corrected" to `A.T`.
 
-### `apply_gramian` (`optimization/gramian.py`)
-
-```python
-def apply_gramian(
-    f0: np.ndarray,
-    x0: np.ndarray,
-    A: np.ndarray,
-    Bh: np.ndarray,
-    scheme: TimeScheme,
-    tau: float,
-    t: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Algorithm 2 (thesis p.86), generalized: solve the adjoint backward from final
-    datum f0, derive the control from phi via Bh, then solve the primal forward from
-    x0 with that control. Returns (y, phi, u). Control-type-agnostic: Bh already
-    encodes whatever distinguishes internal (indicator over omega) from boundary
-    (one- or two-sided trace) control, per discretization/control_operators.py.
-    Shared by hum_internal.py (Algorithm 3, x0 = the real IC on the first call, then
-    zero on every CG-loop call) and hum1_boundary.py (Algorithm 4, same pattern).
-    hum2_boundary.py (Algorithm 5) does NOT call this — its solve order is
-    forward-then-backward (eq. B.12-B.15), not this backward-then-forward recipe."""
-```
-
-### `linear_cg` (`optimization/linear_cg.py`)
+### `hum/algorithms.py`
 
 ```python
 def linear_cg(
     apply_operator: Callable[[np.ndarray], np.ndarray],
     rhs: np.ndarray,
-    x0: np.ndarray,
-    eps: float | None,
-    norm: Norm,
+    x0: np.ndarray,          # CG initial iterate -- an optimization variable, NOT a PDE IC
+    eps: float | None,       # None omits the eps term entirely (structurally exact)
+    norm_fn: Callable[[np.ndarray], float],
+    inner_fn: Callable[[np.ndarray, np.ndarray], float],
     tol: float,
     max_iter: int,
-    preconditioner: Callable[[np.ndarray], np.ndarray] | None = None,
-) -> CGResult:
-    """Standard linear CG for (eps*I + apply_operator)(x) = rhs in the inner product
-    defined by `norm`. `eps=None` omits the eps term entirely (exact variant).
-    `preconditioner` is an explicit, currently-unused seam for future PCG work."""
+) -> tuple[np.ndarray, CGResult]:
+    """Generic linear CG for (eps*I + apply_operator)(x) = rhs."""
+
+def apply_gramian(f0: np.ndarray, ic: np.ndarray, A: np.ndarray, B: np.ndarray, tau: float, t: np.ndarray, scheme: str = "implicit_euler") -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Algorithm 2 (thesis p.86), generalized: backward adjoint solve from f0 ->
+    control u = B^T . phi -> forward primal solve from `ic`. Returns (y, phi, u).
+    Control-type-agnostic via B. Shared by hum_internal (ic = the real PDE IC on
+    the first call, zero on every CG-loop call) and, later, hum1_boundary.
+    hum2_boundary does NOT use this -- its order is forward-then-backward."""
+
+def hum_internal(ic, A, B, h, tau, t, eps=None, tol=1e-6, max_iter=200, scheme="implicit_euler", target=None) -> dict:
+    """Algorithm 3 (thesis p.87), exact (eps=None) or penalized. Returns
+    {f, phi, u, y, n_iter, converged, residual_history}."""
 ```
 
-One shared numerical kernel; `hum_internal`/`hum1_boundary`/`hum2_boundary` each
-supply their own `apply_operator`/`rhs` construction — never a copy-pasted CG loop.
+**Design note on `hum_internal`:** rather than literally recomputing
+`g0 = eps*f0 + y(T) - y1` via `Gramian(f0, ic)` at every CG step (the thesis's
+literal phrasing), it folds `ic`'s free (uncontrolled) response into a fixed `rhs`
+once via `apply_gramian(0, ic, ...)`, then reuses the *same* generic `linear_cg`
+against a zero-IC operator. These are exactly equivalent by linearity of the primal
+PDE whenever the CG initial guess is `f0=0` (always the case, matching every
+canonical RawCode file's own `f0 = np.zeros(...)`) — this is what lets
+`hum1_boundary` reuse the identical `linear_cg` later without a second CG
+implementation, instead of copy-pasting the loop per variant (the exact pattern
+`ALGORITHMS.md` flags as `RawCode`'s failure mode).
 
-### `InitialCondition` (`problem.py`)
+`hum1_boundary`/`hum2_boundary` (Algorithms 4/5) are declared with their intended
+signatures but raise `NotImplementedError` — implement when a boundary experiment
+is scoped; `hum2_boundary` must carry the confirmed zero-IC fix from
+`Proposal/ALGORITHMS.md` relative to `RawCode/hum_frontera_2.py`.
+
+### `hum/diagnostics.py`
 
 ```python
-@dataclass(frozen=True)
-class InitialCondition:
-    kind: Literal["sine"]      # single supported kind for now; extensible later
-                                 # without touching HeatProblem or any solver
-    amplitude: float
-    mode: int                   # k in amplitude * sin(k*pi*(x - L_i) / L), L = L_s - L_i
-
-def make_initial_condition(
-    spec: InitialCondition, interval: tuple[float, float]
-) -> Callable[[np.ndarray], np.ndarray]:
-    """Resolves a JSON-representable IC spec into the callable every solve and
-    diagnostics/exact_solution.py consume. `sine` generalizes the thesis's
-    I(x) = 10*sin(pi*x) (amplitude=10, mode=1, on (0,1)) to any domain, amplitude,
-    and mode — for every choice it stays a genuine Dirichlet eigenfunction of
-    -d^2/dx^2 on (L_i, L_s), which is exactly what keeps exact_solution.py's closed
-    form y_e(x,t) = amplitude * exp(-alpha*(k*pi/L)^2*t) * sin(k*pi*(x-L_i)/L) valid
-    for every config, not just the thesis's own numbers."""
+def spectrum(A: np.ndarray) -> tuple[float, float]: ...          # (lambda_min, lambda_max)
+def condition_number(A: np.ndarray) -> float: ...                # kappa(Ah)
+def exact_solution_sine(x, t, alpha, interval, amplitude=10.0, mode=1) -> np.ndarray: ...
+def plot_state_snapshots(x, t, y_bc, title=...): ...             # 5 snapshots, y including boundary values
+def plot_control(t, u, title=...): ...                           # u(t) (1 channel) or ||u(t)|| (many channels)
+def plot_cg_convergence(residual_history, title=...): ...        # semilog ||g_n||/||g_0|| vs iteration
+def summarize(problem_summary: dict) -> str: ...
 ```
 
-This replaces a raw `Callable` in `HeatProblem`, which was never actually
-JSON-representable despite the doc's own claim below — `InitialCondition` is what
-makes "vary the initial condition from the config file" possible at all.
+`exact_solution_sine` generalizes the thesis's `10*exp(-alpha*pi^2*t)*sin(pi*x)`
+(amplitude=10, mode=1, domain `(0,1)`) to any domain/amplitude/mode — it stays a
+genuine Dirichlet eigenfunction of `-d^2/dx^2` for every choice.
 
-### `HeatProblem` (`problem.py`)
+### `run_experiment.py`
 
 ```python
-@dataclass(frozen=True)
-class HeatProblem:
-    alpha: float                        # diffusion coefficient
-    interval: tuple[float, float]       # (L_i, L_s); domain [0, L] is the L_i=0 case
-    T: float                            # controllability horizon
-    n_space: int
-    n_time: int
-    control_type: Literal["internal", "boundary"]
-    control_region: tuple[float, float] | Literal["right", "left", "both"]
-    boundary_variant: Literal["hum1", "hum2"] | None  # read only when control_type="boundary"
-    scheme: Literal["explicit_euler", "implicit_euler", "rk4"]
-    eps: float | None          # None => structurally exact variant
-    tol: float
-    max_iter: int
-    initial_condition: InitialCondition
+def run(
+    alpha: float = 1.0,
+    interval: tuple[float, float] = (0.0, 1.0),
+    T: float = 1.0,
+    n_space: int = 80,
+    n_time: int = 400,
+    omega: tuple[float, float] = (0.3, 0.8),
+    eps: float | None = None,
+    tol: float = 1e-6,
+    max_iter: int = 200,
+    amplitude: float = 10.0,
+    mode: int = 1,
+    scheme: str = "implicit_euler",
+    make_plots: bool = True,
+) -> dict:
+    """Builds the discretization, runs hum_internal, computes every summary metric
+    (see "Experiments" below), optionally plots, returns the summary dict."""
 ```
 
-This is both the internal config object and the JSON schema `main.py` reads — every
-field, `initial_condition` and `boundary_variant` included, is now JSON-representable,
-so an example config can vary all of them by editing values, no code change needed.
-`hum2_boundary` raises a clear error if `eps` is `None` or `0`; `boundary_variant`
-picks Algorithm 4 (`hum1`, exact or penalized) vs. Algorithm 5 (`hum2`, penalized
-only) and is ignored for `control_type="internal"`.
+Every parameter is a plain Python argument with a sensible thesis-matching default —
+no config file, no schema class. Editing an experiment means calling `run(...)` with
+different keyword arguments (from `run_experiment.py`'s own `# %%` cell, or from
+`run_all_experiments.py`).
 
-### `RunResult` (`results.py`)
+## Experiments
 
-```python
-@dataclass
-class RunResult:
-    control: np.ndarray
-    adjoint_final_datum: np.ndarray
-    y: np.ndarray
-    n_iter: int
-    converged: bool
-    residual_history: list[float]
-    dual_functional: float
-    primal_functional: float
-    duality_gap: float
-    wall_time_s: float
-    git_commit: str
-    timestamp: str
-    problem: HeatProblem
-```
+**Format:** plain `.py` files using `# %%` cell markers (VS Code/Spyder/PyCharm
+render these as notebook-style cells), not `.ipynb` notebooks. Chosen over notebooks
+because: (1) `RawCode/` is itself mostly near-duplicate `.ipynb` files, and notebook
+sprawl is exactly what this whole consolidation effort exists to fix; (2) plain
+scripts are git-diffable while notebook JSON (execution counts, embedded output
+images) is not; (3) `run_all_experiments.py` needs to execute headlessly, which a
+real notebook would need `papermill`/`nbconvert --execute` for.
 
-JSON-serializable; written to `runs/<timestamp>_<commit>.json` by `main.py`.
+**Scope right now — `research_plan.pdf`'s "first experiment" only:**
 
-## Example configs
+> Start with 1-D heat + HUM + implicit Euler. The first objective is not to explore
+> every parameter, but to establish a clean baseline and identify a reproducible
+> numerical phenomenon. Record: κ(Ah), λmin, λmax, ‖uh‖, ‖yh(T)‖, CG iterations, CPU
+> time, and control error against a manufactured or high-resolution reference.
 
-Exactly two, one per `control_type` — every `HeatProblem` field above is present and
-editable in place, so varying diffusion (`alpha`), domain (`interval`), initial
-condition, or any other parameter never requires touching code. Defaults use the
-thesis's own `10·sin(πx)` initial condition and `(0,1)` domain (Ch. 4's running
-example), so a fresh clone reproduces a thesis-comparable run out of the box.
+Internal control (Algorithm 3), exact (`eps=None`), implicit Euler, the thesis's own
+`10·sin(πx)` initial condition on `(0,1)`. "Control error against a … reference" is
+left as a deliberate follow-up in `run_all_experiments.py` (needs a second, finer
+comparison run) rather than guessed at here.
 
-`examples/configs/internal_control.json` (Algorithm 3):
+**Visualization**, per the comparison already made and agreed on:
 
-```json
-{
-  "alpha": 1.0,
-  "interval": [0.0, 1.0],
-  "T": 1.0,
-  "n_space": 50,
-  "n_time": 200,
-  "control_type": "internal",
-  "control_region": [0.3, 0.8],
-  "boundary_variant": null,
-  "scheme": "implicit_euler",
-  "eps": null,
-  "tol": 1e-6,
-  "max_iter": 200,
-  "initial_condition": {"kind": "sine", "amplitude": 10.0, "mode": 1}
-}
-```
+- *Per experiment* (`run_experiment.py`, always produced): state snapshots
+  (`y(x,·)` at 5 times — does the control flatten the solution by `T`?), the control
+  profile, the CG convergence curve (semilog residual vs. iteration), and a printed
+  summary line.
+- *Cross experiment* (`run_all_experiments.py`): every run's summary appended as a
+  row to `runs_summary.csv` — the minimal seed of `research_plan.pdf`'s
+  "experiment-tracking layer," without its database/frontend yet.
+- *Deferred*: log-log scaling plots (error/iterations/`κ` vs. mesh size or `ε`) —
+  no sweep exists yet to plot; a shareable dashboard — worth it once there are dozens
+  of runs to browse, not one.
 
-`examples/configs/boundary_control.json` (Algorithm 4 by default; flip
-`boundary_variant` to `"hum2"` for Algorithm 5 — and give `eps` a numeric value when
-doing so, since HUM2 rejects `null`):
+## Deferred (explicit, not silently dropped)
 
-```json
-{
-  "alpha": 1.0,
-  "interval": [0.0, 1.0],
-  "T": 1.0,
-  "n_space": 50,
-  "n_time": 200,
-  "control_type": "boundary",
-  "control_region": "right",
-  "boundary_variant": "hum1",
-  "scheme": "implicit_euler",
-  "eps": null,
-  "tol": 1e-6,
-  "max_iter": 200,
-  "initial_condition": {"kind": "sine", "amplitude": 10.0, "mode": 1}
-}
-```
-
-`control_region` means different things per `control_type`: an internal control
-sub-interval `ω ⊂ (L_i, L_s)` (must lie inside `interval`; `main.py` validates this),
-or which boundary side is actuated. `eps` set to a float rather than `null` switches
-`internal_control.json` to Algorithm 3's penalized path, or `boundary_control.json`
-to HUM1's penalized path — the exact/penalized split that used to be five separate
-files is now this one field.
+- **JSON config schema / `HeatProblem`/`InitialCondition` dataclasses** — replaced by
+  plain Python keyword arguments to `run()` for now. Revisit if/when config-file-
+  driven runs are actually needed (e.g. for Month 2+'s larger sweeps).
+- **`RunResult`/`runs/` git-tracked JSON-per-run traceability** — replaced by
+  `runs_summary.csv` for now. `research_plan.pdf`'s own Month-1 goal ("an
+  experiment-tracking layer… store parameters, numerical outputs, solver statistics,
+  operators/matrices, controls, states, plots, code commit, machine metadata… ~100
+  experiments… a lightweight frontend") is bigger than this and should be built once
+  the baseline is proven, not before.
+- **`hum1_boundary`/`hum2_boundary`** (Algorithms 4 & 5) — designed (signatures,
+  shared `apply_gramian`) but not implemented; add when a boundary experiment is
+  scoped.
+- **Everything past the first experiment**: independent/coupled mesh refinement,
+  regularization (`ε=h^p`) and tolerance sweeps, preconditioning, the least-squares
+  formulation comparison, the Burgers pilot, the dossier's ~123-configuration
+  protocol, EOC tables, condition-number scaling laws — all real goals in the
+  proposal documents, all explicitly out of scope until this baseline runs and is
+  trusted.
+- **Packaging/process**: `pyproject.toml`, `tests/`, `README.md`/`WORKFLOW.md` — none
+  of these exist yet either; add when there's more than one contributor or more than
+  a handful of files to navigate.
