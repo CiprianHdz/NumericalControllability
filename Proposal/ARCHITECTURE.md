@@ -3,6 +3,10 @@
 Fixed reference for the HUM baseline codebase. Any structural change to the tree or
 the interface contracts below is a diff to this file first, code second.
 
+This document (and `ALGORITHMS.md`) live in `Proposal/` alongside the research plan
+and dossier, not inside `HUM Code/` itself — they are project/planning documents
+describing the code, not part of the installable package.
+
 Sole algorithmic reference: `SourceThesis/TesisCIMATVersionFirmada.pdf`, Ch. 4 +
 Appendix B (Algorithms 1–5, pp. 81–89). See `ALGORITHMS.md` for the full variant
 inventory. `SourceDocuments/Glowinski_and_numerical_control_problems.pdf` is cited as
@@ -16,13 +20,16 @@ NumericalControllability/
 ├── RawCode/                        (untouched, historical reference)
 ├── Proposal/, SourceThesis/, SourceDocuments/   (untouched)
 ├── .gitignore                      (repo root)
+├── Proposal/
+│   ├── numerical_controllability_research_plan.pdf
+│   ├── numerical_controllability_dossier_revised.pdf
+│   ├── ARCHITECTURE.md         # this file
+│   └── ALGORITHMS.md           # algorithm inventory, manual sign-off checkpoint
 └── HUM Code/
     ├── pyproject.toml
     ├── README.md                   # traceability doc: thesis alg/eq ↔ module map;
     │                               #   also documents the 3 excluded broken/abandoned files
     ├── WORKFLOW.md                 # the manual: how to run, branch, track results
-    ├── ARCHITECTURE.md             # this file
-    ├── ALGORITHMS.md               # algorithm inventory, manual sign-off checkpoint
     ├── main.py                     # THE MAIN APP — single entry point, config-driven
     ├── src/hum/
     │   ├── __init__.py

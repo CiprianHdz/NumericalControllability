@@ -1,5 +1,8 @@
 # Algorithm inventory
 
+Lives in `Proposal/` alongside `ARCHITECTURE.md`, the research plan, and the dossier
+— a planning/reference document, not part of the `HUM Code/` package itself.
+
 Manual sign-off checkpoint. This document is the authoritative statement of which
 HUM variants exist in `RawCode/`, which are canonical sources for the baseline, and
 which are excluded as broken or abandoned. **Read and confirmed before
