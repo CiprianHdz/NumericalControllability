@@ -46,7 +46,8 @@ NumericalControllability/
     │   │   └── pde.py                         # forward_solve / adjoint_solve, scheme-agnostic
     │   ├── optimization/                       # AXIS 3: CG engine + norms + HUM variants
     │   │   ├── norms.py                       # L2Norm, H10Norm, HInvNorm (cached factorization)
-    │   │   ├── gramian.py                     # Algorithm 2 ("apply operator once")
+    │   │   ├── gramian.py                     # Algorithm 2, generalized: shared by
+    │   │   │                                  #   hum_internal.py AND hum1_boundary.py
     │   │   ├── linear_cg.py                   # ONE generic CG engine, preconditioner seam
     │   │   ├── result.py                      # CGResult: n_iter, converged, residual_history
     │   │   ├── hum_internal.py                # Algorithm 3 — exact + penalized (eps=None|float)
@@ -89,15 +90,22 @@ NumericalControllability/
 - `solvers/pde.py` — `forward_solve`/`adjoint_solve`; loops over the time grid,
   never references a concrete scheme by name.
 - `optimization/norms.py` — `Norm` protocol + `L2Norm`, `H10Norm`, `HInvNorm`.
-- `optimization/gramian.py` — Algorithm 2 (thesis p.86): apply the boundary-control
-  Gramian once (backward solve → control → forward solve).
+- `optimization/gramian.py` — Algorithm 2 (thesis p.86), **generalized**: apply the
+  Gramian once (adjoint backward solve with datum → control via `Bh` → primal forward
+  solve), control-type-agnostic — `Bh` (from `discretization/control_operators.py`)
+  already carries whatever distinguishes internal from boundary control (operator
+  identity, any scaling). This is the same three-step recipe Algorithm 3's Step 0 and
+  per-iteration step (eq. B.6–B.9) use inline without naming it — so it's shared by
+  both `hum_internal.py` (Algorithm 3) and `hum1_boundary.py` (Algorithm 4).
+  **Not** used by `hum2_boundary.py` (Algorithm 5): its solve order is forward-first
+  then backward (eq. B.12–B.15), structurally different from the Gramian recipe.
 - `optimization/linear_cg.py` — the one generic CG kernel shared by every HUM variant.
 - `optimization/result.py` — `CGResult` (iteration count, convergence flag, residual
   history).
 - `optimization/hum_internal.py` — Algorithm 3 (thesis p.87), exact and penalized
-  paths.
+  paths; builds its `apply_operator`/`rhs` for `linear_cg` on top of `gramian.py`.
 - `optimization/hum1_boundary.py` — Algorithm 4 (thesis p.88), exact and penalized
-  paths.
+  paths; also builds on `gramian.py`.
 - `optimization/hum2_boundary.py` — Algorithm 5 (thesis p.89), penalized only, with
   the confirmed zero-IC bug fixed relative to `RawCode/hum_frontera_2.py`.
 - `problem.py` — `HeatProblem`, the config schema.
@@ -140,6 +148,29 @@ class Norm(Protocol):
 Concrete: `L2Norm(h)`, `H10Norm(A, h)` (canonical quadratic form
 `sqrt(h·xᵀAx)`), `HInvNorm(A, h)` (factorizes `A` once at construction, reused across
 every CG iteration).
+
+### `apply_gramian` (`optimization/gramian.py`)
+
+```python
+def apply_gramian(
+    f0: np.ndarray,
+    x0: np.ndarray,
+    A: np.ndarray,
+    Bh: np.ndarray,
+    scheme: TimeScheme,
+    tau: float,
+    t: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Algorithm 2 (thesis p.86), generalized: solve the adjoint backward from final
+    datum f0, derive the control from phi via Bh, then solve the primal forward from
+    x0 with that control. Returns (y, phi, u). Control-type-agnostic: Bh already
+    encodes whatever distinguishes internal (indicator over omega) from boundary
+    (one- or two-sided trace) control, per discretization/control_operators.py.
+    Shared by hum_internal.py (Algorithm 3, x0 = the real IC on the first call, then
+    zero on every CG-loop call) and hum1_boundary.py (Algorithm 4, same pattern).
+    hum2_boundary.py (Algorithm 5) does NOT call this — its solve order is
+    forward-then-backward (eq. B.12-B.15), not this backward-then-forward recipe."""
+```
 
 ### `linear_cg` (`optimization/linear_cg.py`)
 
