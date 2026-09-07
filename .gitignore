@@ -20,6 +20,9 @@ venv/
 *.pdf
 !Proposal/*.pdf
 
+# Cipriano's own thesis LaTeX source — kept on disk for reference, not tracked
+SourceThesis/TesisLaTeXCode/
+
 # Legacy scripts/notebooks superseded by HUM Code/ — kept on disk as
 # historical reference only, not tracked in git
 RawCode/*.py
