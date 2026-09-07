@@ -3,14 +3,29 @@
 Source of every quote below: `SourceThesis/TesisCIMATVersionFirmada.pdf`, "Numerical
 and Constrained Controllability of the Heat Equation" (Cipriano Callejas Hernández,
 CIMAT, 2024) — Chapters 1–2, the pre-numerical theory in Chapter 4, Chapter 3, and
-Appendix A. This document extracts the **continuous** theory only (nothing about
-discretization/pseudocode — that's `ALGORITHMS.md`). Exact quotes are used
-throughout, each tagged with page/equation/theorem number and citation attribution.
-Reviewed against the plan's `Docs/` outline before any `.tex` is written (Step 10).
+Appendix A — **plus the thesis's own LaTeX source**
+(`SourceThesis/TesisLaTeXCode/`, untracked) for §6 below, which draws on material
+present in source but not in the compiled PDF's page numbering (`introduction.tex`,
+`Cap2.tex`, `Preliminary.tex`, `apendixA.tex`; quotes from these are tagged by file
+and line number instead of page, to distinguish them from the PDF-sourced quotes
+elsewhere in this document). This document extracts the **continuous theory**, plus
+the **theory of time-/space-discrete uniform controllability** — i.e. theorems about
+whether and how discretization preserves controllability as the mesh refines,
+grounded in classical finite-dimensional (ODE) controllability results. It does
+**not** cover discretization *pseudocode*, numerical-scheme implementation, or
+algorithmic HUM variants (exact/penalized, HUM1/HUM2) — those remain
+`ALGORITHMS.md`'s scope. In short: theorems about whether discretization preserves
+controllability are in scope here; how to code the discretized solver is not. Exact
+quotes are used throughout, each tagged with page/equation/theorem number (or
+file:line for LaTeX-source quotes) and citation attribution. Reviewed against the
+plan's `Docs/` outline before any `.tex` is written (Step 10).
 
-Organized under the same eight headings as the plan, with **Internal** and
+Organized under the same nine headings as the plan, with **Internal** and
 **Boundary** control kept as separate sub-items wherever the theory genuinely
-differs — never blended into one generic paragraph.
+differs — never blended into one generic paragraph. Per explicit instruction, the
+new discrete-controllability material in §6 treats **internal (distributed)
+control as the primary case**, with boundary control mentioned only where the
+source itself draws a contrast.
 
 ---
 
@@ -71,12 +86,33 @@ Semilinear boundary case (Ch. 3, p.32), same transposition + fixed-point route:
 *"...by means of transposition and fixed point methods [LM12], we have
 y ∈ C([0,T];L²(Ω))."*
 
-**Gap to flag, not fill silently:** no mild/semigroup well-posedness statement in the
-classic parabolic energy form `y ∈ C([0,T];L²(Ω)) ∩ L²(0,T;H¹₀(Ω))` is stated
-anywhere in the thesis — it consistently uses either the abstract semigroup
-framework (Ch. 2, citing Pazy) or the transposition/weak-solution framework in `H⁻¹`
-(Ch. 3/4). If `Docs/` wants the energy-space estimate stated explicitly, it must be
-added with its own citation (e.g. Evans) — not attributed to this thesis.
+**Gap in the thesis, now filled independently — not from the thesis:** no
+mild/semigroup well-posedness statement in the classic parabolic energy form
+`y ∈ C([0,T];L²(Ω)) ∩ L²(0,T;H¹₀(Ω))` is stated anywhere in the thesis — it
+consistently uses either the abstract semigroup framework (Ch. 2, citing Pazy) or
+the transposition/weak-solution framework in `H⁻¹` (Ch. 3/4). For the document to
+stand on its own, the standard energy-estimate theorem is added here directly:
+
+> For `y0 ∈ L²(Ω)` and `f ∈ L²(0,T;L²(Ω))`, the linear heat equation
+> `y_t − ∆y = f` in `Q`, `y=0` on `Σ`, `y(·,0)=y0`, has a unique weak solution
+> `y ∈ C([0,T];L²(Ω)) ∩ L²(0,T;H¹₀(Ω))`, with `y_t ∈ L²(0,T;H⁻¹(Ω))`, obtained via
+> the Galerkin method and the standard parabolic energy estimate
+> `sup_t‖y(t)‖²_{L²} + ∫₀ᵀ‖y‖²_{H¹₀} dt ≤ C(‖y0‖²_{L²} + ‖f‖²_{L²(Q)})`.
+
+Citation: **[Eva10, §7.1]** = Evans, L.C., *Partial Differential Equations*, AMS,
+2010 — same book already cited elsewhere in this document (§1 above, `[Eva10]`) for
+a thesis-attributed quote about the transposition-construction auxiliary problem;
+this is a *different*, independently-added theorem from the same book, not
+attributed to the thesis. Unlike the thesis quotes throughout this document (which
+were verified line-by-line against the LaTeX/PDF source), this statement was not
+checked page-by-page against Evans' book in this session — it is standard material
+reproduced from memory of the textbook's structure, not a verified quote.
+
+**Cross-reference (regularity of controls, not states):** Appendix A.2 also contains
+a "Hidden Parabolic Regularity" Proposition used to upgrade an `L²` null control to
+higher (e.g. `L∞`) regularity on the control region — this is Ch. 3's constrained-
+controllability machinery (see the existing caveat in §2 below), not a general
+baseline-HUM regularity result, so it is quoted in full in §8 rather than here.
 
 ---
 
@@ -110,9 +146,23 @@ prominently in `Docs/`'s §3b.
   4]."* — citing **[LTZ17]** = Lohéac, Trélat & Zuazua, *Minimal controllability
   time for the heat equation under unilateral state or control constraints*, 2017.
   Also belongs to the constrained (Ch. 3) thread, not the baseline HUM.
-- No parabolic-smoothing theorem (e.g. `y0∈L² ⇒ y(t)∈H¹₀` for `t>0`) is stated
-  anywhere in the thesis text, though it is implicit in `D(A)=H²∩H¹₀` (p.24). If
-  `Docs/` wants this stated as a theorem, it needs its own citation, not the thesis.
+- **Gap in the thesis, now filled independently — not from the thesis:** no
+  parabolic-smoothing theorem is stated anywhere in the thesis text, though it is
+  implicit in `D(A)=H²∩H¹₀` (p.24). The standard analytic-semigroup smoothing
+  statement is added here directly: since `A=-Δ` with `D(A)=H¹₀(Ω)∩H²(Ω)`
+  generates an analytic semigroup `(e^{-tA})_{t≥0}` on `L²(Ω)` (per the semigroup
+  framework already cited in §1, `[Paz12]`), the uncontrolled solution satisfies
+  `y0 ∈ L²(Ω) ⇒ y(t) ∈ D(A) ⊂ H¹₀(Ω) ∩ H²(Ω)` for every `t > 0`, with
+  `‖y(t)‖_{D(A)} ≤ (C/t)‖y0‖_{L²(Ω)}` — the regularizing effect of the heat
+  semigroup. Citation: **[Paz12, Ch. 2]** = Pazy, *Semigroups of Linear Operators
+  and Applications to Partial Differential Equations*, 2012 — same book already
+  used in §1 for the abstract well-posedness framework; this statement was not
+  checked page-by-page against Pazy's book, unlike the thesis quotes elsewhere in
+  this document.
+- See §6 below for the *finite-dimensional* Kalman-condition/observability
+  machinery underlying discrete uniform controllability — that is "regularity of
+  controllability" for an ODE system, a different concern from the PDE state/control
+  regularity discussed in this section, and is kept separate deliberately.
 
 ---
 
@@ -163,10 +213,61 @@ verifies y(x,0) = y0 and y(x,T) = y1 for all x ∈ Ω."*
 
 ## 4. HUM duality theory (continuous, infinite-dimensional)
 
-The finite-dimensional template (**Theorem 2**, observability ⇔ controllability,
-p.17, citing **[Zua02, Theorem 2.1.1]**; **Theorem 3**, HUM control, pp.17-19) is
-already in `ALGORITHMS.md`. Section 2.3 (pp.21-24) is the separate
-infinite-dimensional development:
+### 4a. Finite-dimensional (ODE) prototype — Kalman condition, ODE observability, ODE-HUM
+
+The infinite-dimensional development below (Section 2.3) generalizes a
+finite-dimensional template stated earlier in the same chapter for the ODE system
+`y′(t)=Ay(t)+Bv(t)` in `(0,T)`, `y(0)=y0` (Eq. `eq12`, `A`,`B` real matrices). The
+theorem *statements* are given here in full — previously this was only a one-line
+pointer to `ALGORITHMS.md` — because they are the direct prerequisite for §6's
+discrete/ODE uniform-controllability theory (a space semi-discretization reduces the
+PDE control problem to exactly this ODE setting, see §6.1). Pseudocode/numerical
+implementation of ODE-HUM stays in `ALGORITHMS.md`.
+
+**Theorem [Kalman rank condition]** (`Preliminary.tex:136-146`, citing
+**[Cor07, Theorem 1.16]** — matches the PDF's Theorem 1, p.14):
+
+> "Consider the (Kalman) matrix defined as `K = [B, AB, ⋯, A^{n-1}B]`. (Kal) The
+> Kalman matrix K is of rank n (or full rank) if and only if `L_T` is surjective."
+
+— where `L_T: L¹(0,T;ℝⁿ) → C([0,T];ℝᵐ)`, `v ↦ ∫₀ᵀ e^{-(T-s)A}Bv(s)ds` (surjectivity
+of `L_T` is equivalent to exact controllability of `y′=Ay+Bv`).
+
+Adjoint ODE system (`eq:dualODE`, `Preliminary.tex:219-224`): `φ′(t) = -A*φ(t)` in
+`(0,T)`, `φ(T)=φT`, where `A*` is the adjoint matrix of `A`.
+
+**Theorem `pobs`** (`Preliminary.tex:231-239`, citing **[Zua02, Theorem 2.1.1]** —
+matches the PDF's Theorem 2, p.17):
+
+> "System (eq12) is controllable in time T if and only if the adjoint system
+> (eq:dualODE) is observable in time T, that is, if there exists a constant
+> C = C(T) > 0 such that, for any solution φ of (eq:dualODE), we have
+> `|φ(0)|²_{ℝⁿ} ≤ C∫₀ᵀ|B*φ|²_{ℝᵐ} dt`. (obs) Both properties hold in all time T if
+> and only if the Kalman rank condition (Kal) is satisfied."
+
+**Theorem [HUM control] `teo:humcontrol`** (`Preliminary.tex:244-260`, matches the
+PDF's Theorem 3, pp.17-19):
+
+> "Let `𝒥: ℝⁿ → ℝ` be defined by `𝒥(φT) = ½∫₀ᵀ|B*φ|² + (y0,φ(0))`, where φ is the
+> solution of (eq:dualODE) with final datum `φ(T)=φT`... Suppose 𝒥 has a minimizer,
+> say `φ̂T ∈ ℝⁿ`... Then, setting `v = B*φ̂` ... it follows that v is the control of
+> minimal norm of system (eq12) with initial datum `y(0)=y0`, such that null
+> controllability holds at time T, i.e. `y(T)=0`."
+
+**Gramian operator** `Λ` (`eq:gramian`, `Preliminary.tex:305-311`):
+
+> "Consider the linear operator `Λ: ℝⁿ → ℝⁿ`, defined by
+> `g ↦ Λ(g) := ∫₀ᵀ B*φg(s) dt`, where φg is the solution of (eq:dualODE) with final
+> datum g. This is known as the Gramian operator and is well defined by duality,
+> see [Boy13]."
+
+This is the same **[Boy13]** citation used below (§4/§5) for the PDE-level Gramian —
+the ODE and PDE constructions share the identical duality apparatus, just over
+`ℝⁿ` instead of an infinite-dimensional Hilbert space `H`.
+
+### Infinite-dimensional generalization
+
+Section 2.3 (pp.21-24) is the infinite-dimensional development:
 
 > "While in finite dimension ... the Kalman condition, in the PDEs setting more
 > tools are needed ... it is known that the exact controllability of the
@@ -185,8 +286,31 @@ functional (Eq. 2.22, p.22): `a(g,ξ) = ∫₀ᵀ B*φg · B*φξ`, and
 `J(g) = ½a(g,g) + ⟨y0,φg(0)⟩` (unnumbered display, p.22), with `⟨x,y⟩` the
 `H×H′` dual pairing. This *is* the infinite-dimensional HUM dual functional — it is
 not given its own theorem number; the text defers the existence/coercivity
-discussion to Remark 5 (see §6 below), and develops **penalized HUM** (§5) as the
+discussion to Remark 5 (see §7 below), and develops **penalized HUM** (§5) as the
 actual route to a well-posed infinite-dimensional minimization.
+
+**Gap in the thesis, now filled independently — not from the thesis:** the thesis
+never states a standalone existence/uniqueness theorem for the unpenalized,
+infinite-dimensional HUM minimizer — Section 2.3 defines `J` and moves directly to
+penalization (§5). The standard argument, added here directly, is the original
+Lions/HUM completion-space construction: let
+`F := completion of H with respect to the seminorm ‖g‖_F := a(g,g)^{1/2}`. If this
+seminorm is genuinely a norm on `H` — equivalent to a unique-continuation property
+for the adjoint system (`B*φg ≡ 0` on `(0,T)` ⟹ `g = 0`) — then `H` embeds
+continuously and densely in `F`, the linear form `g ↦ −⟨y0,φg(0)⟩` extends
+continuously to `F`, and Riesz representation on the Hilbert space `F` gives a
+unique `ĝ ∈ F` minimizing `J` over `F` (not merely over `H`). This is exactly the
+completion Remark 5 already describes informally as "the space where J is coercive
+... a much larger space than L²(0,1)" (quoted in full in §7 below) — the formal
+existence/uniqueness statement the thesis gestures at without naming as a theorem.
+Citation: **[Lio88]** = Lions, J.-L., *Contrôlabilité Exacte, Perturbations et
+Stabilisation de Systèmes Distribués, Tome 1*, Masson, 1988 — the original HUM
+source. Note: this is the first place in this document citing Lions' book
+*directly*; the thesis itself never does so — it only cites Russell's review of it
+(**[Rus90]**, §9 below). As with the other three independently-added results in
+this document, this statement was not checked page-by-page against Lions' book in
+this session (unlike the thesis quotes, which were verified line-by-line against
+the LaTeX/PDF source) — no specific theorem/page number is claimed.
 
 Observability inequality, continuous 1D internal-control case (Eq. 2.30, p.25):
 
@@ -306,7 +430,236 @@ explicitly-labeled open conjecture, not alongside the proven Boyer results.
 
 ---
 
-## 6. Known theoretical/numerical issues
+## 6. Discrete-in-time and discrete-in-space uniform controllability
+
+Source for this whole section: the thesis's **LaTeX source**
+(`SourceThesis/TesisLaTeXCode/`), not the compiled PDF — quotes are tagged by
+`file:line`. **Internal (distributed) control is the primary case throughout**, per
+explicit scope; boundary control appears only where the source itself draws a
+one-line contrast.
+
+### 6.1 Framing — three discretization formulations
+
+`Cap2.tex:11-13` (chapter-opening framing): *"In recent years, few works have been
+focused on the study of discrete control problems with the interest of establishing
+its theoretical framework, see [BHS20] and references therein. In those works,
+discrete control problems are proposed using three different formulations:
+space-discrete, time-discrete and fully discrete."*
+
+**The central PDE→ODE bridge statement**, `Cap2.tex:81`:
+
+> "Notice that a space semi-discrete approximation of the parabolic control
+> problems (eq:bcheat) or (eq:icheat), as we shall see below, **reduces the initial
+> problem to a control problem for an ordinary differential equations (ODE's)
+> system**."
+
+The full state-of-the-art literature review, `introduction.tex:111-122`:
+
+> "...we have the pioneering work [GLL90] for the wave equation, treated as an
+> unconstrained optimization problem for the adjoint system, by means of duality
+> theory of convex optimization [ET99], known as the Hilbert uniqueness method
+> (HUM). This later adapted to the heat equation to find null controls, see
+> [CGL94]. The HUM is part of a family of methods, so called dual methods, as well
+> as the weighted HUM, which incorporates a small perturbation to avoid the
+> oscillatory behaviour of the control function [Zua06]. Recently primal methods
+> [FM14] (a variational approach which works directly with the primal system using
+> Carleman weights) and least squared methods [MP14] have been used, nonetheless
+> the results are not so distant to those with the dual approach. In particular,
+> the study of discrete control of parabolic problems may be divided into three
+> different formulations, which we briefly discuss the state of the art in each
+> one:
+>
+> **Time-discrete setting.** In [Zh08], the authors proved that, in general, the
+> semi-discrete multi-dimensional heat equation not only is not null controllable,
+> but it is also not approximately null controllable. In this direction, it is
+> proposed another sense of controllability in [BHS20] where they establish
+> Carleman-type estimations for time-discrete approximations of the parabolic
+> operator `−∂t−∆`, allowing to obtain certain controllability results.
+>
+> **Space-discrete setting**. This type of discretization has received more
+> attention in the past few years [LZ98, LT06, BHLR10, CHS21]. However, most of the
+> literature has been focused on whether some control properties can be retained
+> after discretization. In particular, **the uniform controllability is only
+> established for the semi-discrete 1D heat equation** [Zua06, LZ98]. In [Zua05],
+> the authors show with a counterexample that the space semi-discrete version of a
+> 2D heat equation is not controllable.
+>
+> **Fully discrete setting**. Results in this category are more scarce and
+> limited. Recently in [CHS21], the authors showed by means of Carleman
+> inequalities that a family of one dimensional parabolic equations are in fact
+> null controllable, but in terms of certain relaxed sense of controllability."
+>
+> **"Thus, in general, discretization and controllability do not commute."**
+
+New citations introduced in this section: **[Zh08]** = Zheng, C., *Controllability
+of the time discrete heat equation*, Asymptotic Analysis, 2008; **[BHS20]** =
+Boyer, F. & Hernández-Santamaría, V., *Carleman estimates for time-discrete
+parabolic equations and applications to controllability*, ESAIM: Control,
+Optimisation and Calculus of Variations, 2020; **[LT06]** = Labbé, S. & Trélat, E.,
+*Uniform controllability of semidiscrete approximations of parabolic control
+systems*, Systems & Control Letters, 2006; **[BHLR10]** = Boyer, F., Hubert, F. &
+Le Rousseau, J., *Discrete Carleman estimates for elliptic operators and uniform
+controllability of semi-discretized parabolic equations*, Journal de Mathématiques
+Pures et Appliquées, 2010 (this thesis's own `biblio.bib` dates it 2010; the
+Proposal's dossier cites what appears to be the same paper as "2011" in the
+Cross-check section below — likely a preprint-vs-journal-issue date difference,
+not a different paper; not resolved further here); **[Zua06]** = Zuazua, E., *Control and numerical
+approximation of the wave and heat equations*, ICM Madrid, 2006 (**distinct from
+[Zua02]** above — a different Zuazua paper, confirmed via `biblio.bib`); **[Zua05]**
+= Zuazua, E., *Propagation, observation, and control of waves approximated by
+finite difference methods*, SIAM Review, 2005; **[CHS21]** = Casanova, P.G. &
+Hernández-Santamaría, V., *Carleman estimates and controllability results for
+fully discrete approximations of 1D parabolic equations*, Advances in
+Computational Mathematics, 2021; **[FM14]** = Fernández-Cara, E. & Münch, A.,
+*Numerical exact controllability of the 1D heat equation: duality and Carleman
+weights*, J. Optim. Theory Appl., 2014; **[MP14]** = Münch, A. & Pedregal, P.,
+*Numerical null controllability of the heat equation through a least squares and
+variational approach*, Eur. J. Appl. Math., 2014.
+
+### 6.2 Space-discrete uniform controllability — the ODE-controllability bridge (internal control)
+
+This is the formulation actually used in this work, and the only one of the three
+proven to give uniform controllability — see §6.3 below for why the other two are
+not pursued further here.
+
+`Cap2.tex:71`: *"Based on the fact that the uniform controllability for the
+space-discrete formulation of the 1D heat equation has been proved [LZ98], in this
+chapter we will analyze numerical approaches using such formulation and based on
+the HUM method."*
+
+**Internal-control semi-discrete ODE system** (`discreteI`, `Cap2.tex:190-220`),
+from central-difference approximation of `y_t − αy_xx = v(x,t)1_ω`:
+
+> `[y′_1, y′_2, ⋯, y′_N]ᵀ = (α/h²)·tridiag(1,−2,1)·[y_1, y_2, ⋯, y_N]ᵀ + B_h v_h`
+
+with `B_h = 1_{ω_h}` the diagonal `N×N` matrix `(1_{ω_h})_{j,j} = 1` if `x_j ∈ ω`,
+`0` otherwise (the identity matrix when `ω` is the whole domain). Contrast with
+boundary control (`Cap2.tex:230-232`, one-line remark): *"the difference between
+both semi-discrete control problems (discreteB) and (discreteI) is in the term
+`B_h v_h`; where in the case of the boundary control `v_h` is a scalar control and
+`B_h` is a column vector, whereas in the distributed case `v_h` is a column vector
+and `B_h` is in fact a matrix."*
+
+**Explicit closed-form spectrum** of `A_h` (`Cap2.tex:272-281`, citing
+`[Section 3.4]{leveque2007finite}` — add **[Lev07]** = LeVeque, R.J., *Finite
+Difference Methods for Ordinary and Partial Differential Equations*, SIAM, 2007):
+eigenvalues `λ_j = (2α/h²)(1 − cos(jπh))`, eigenvectors `e^j_i = sin(ijπh)`,
+`j,i = 1,…,N`. Per `Cap2.tex:402`, this explicit spectrum is *why* the
+uniform-controllability proof below is tractable: it "relies solely in fact that
+the spectrum of the Laplacian can be computed explicitly."
+
+**Governing principle — the precise definition of uniform controllability**,
+`Cap2.tex:365`:
+
+> "Controllability properties must be considered for proving the convergence of the
+> discretized control problem. Following a classic way to prove controllability
+> [AVOY96], an observability inequality has to be demonstrated for the associated
+> discrete approximation of the adjoint system. Moreover, **if the constant of the
+> observability inequality does not depend on the discretization parameter then
+> uniform controllability is achieved**, see [Zua06]." (See §6.3 below: this
+> uniform property is the one thing that fails, or only holds in a relaxed sense,
+> for the time-discrete and fully-discrete formulations.)
+
+**Important nuance — preserve, do not smooth over: why the Kalman rank condition
+alone is not enough.** `Cap2.tex:376-377`:
+
+> "Recall that there is a necessary and sufficient condition for the exact
+> controllability of ODE's which is called the Kalman condition... However, since
+> we have a dependency with respect to h, it is more convenient to transform the
+> control problem into an observability problem for the semi-discrete adjoint
+> system."
+
+The Kalman rank condition (§4a above) is a **qualitative, binary** criterion for a
+*fixed* finite-dimensional system — full rank or not. It says nothing about how the
+observability constant `C` behaves as the system size grows with `h → 0`. Uniform
+controllability requires exactly that missing quantitative control, which is why
+the thesis reformulates the question as a discrete observability inequality instead
+of stopping at "the Kalman matrix has full rank for every h."
+
+Discrete adjoint system (`eq:discreteDual`, `Cap2.tex:392-399`): `φ_h′(t) =
+−A_h^T φ_h(t)`, `φ_h(T) = φ_h^T`.
+
+**Discrete observability inequality** (`Cap2.tex:404-413` — present in the LaTeX
+source as a `\begin{comment}`-wrapped theorem, not rendered in the compiled thesis;
+included here since the identical inequality reappears, uncommented, as item 1 of
+the "uniformly controllable" definition below — no unverified content is added by
+stating it in theorem form):
+
+> "For any T > 0, there exists a positive constant C(T) > 0 such that
+> `h∑ⱼ₌₁ᴺ|φ_j(0)|² ≤ C∫₀ᵀ|φ_N(t)/h|²dt`, holds for any φ_h solution of
+> (eq:discreteDual) and any h > 0."
+
+**Theorem [Null controllability] `teo:nullcontrolapprox`** (`Cap2.tex:416-430`,
+active/compiled — this is the theorem previously left as a one-line stub, "Theorem
+13," in §9 below):
+
+> "For any T > 0 and `y⁰_h`, there exists a control `v_h ∈ L²(0,T)` such that the
+> solution of control problem (discretePrimal)-(discreteB) satisfies `y_j(T)=0`,
+> `j=1,…,N`. Moreover, let `y⁰ ∈ L²(0,L)`, then the controls `v_h` of system
+> (discretePrimal) may be built such that `v_h → v` in `L²(0,T)` as `h → 0`, where
+> v is a null control for the continuous heat equation provided the initial data in
+> (bcheat) are chosen in an appropriate way."
+
+**Explicit internal-control extension**, `Cap2.tex:433`:
+
+> "Theorem (teo:nullcontrolapprox) can be modified to also obtain the convergence
+> of the discretization for **the internal case** (discreteI), see
+> [Zua06, Remark 3.4]."
+
+This is the source's own explicit bridge confirming the null-controllability +
+convergence theorem — stated above for the boundary case — carries over to internal
+(distributed) control.
+
+**"Uniformly controllable with respect to h" — definition and scope caveat**
+(`Cap2.tex:439-454`, numbered list):
+
+> "1. System (discretePrimal) is said to be **uniformly controllable with respect
+> to h**, if the discrete observability inequality
+> `h∑ⱼ₌₁ᴺ|φ_j(·,0)|² ≤ C∫₀ᵀ|φ_N(·,t)/h|²` holds for a suitable constant C > 0
+> independent of h. **This uniform property only holds for the one-dimensional
+> heat equation**, see [LZ98].
+> 2. The convergence in L²(0,T) of `v_h → v` is a consequence of having an explicit
+> way of choosing the initial datum `y⁰` in L²(0,T) by means of Fourier series, see
+> [LZ98, Remark 1.2].
+> 3. `v_h` converges to the control v of minimal norm, which can be built by means
+> of the analytic HUM, presented in the previous chapter."
+
+**2D counterexample — dimension-general scope caveat**, `introduction.tex:117`
+(already quoted in §6.1): the space semi-discrete 2D heat equation is **not**
+controllable [Zua05] — this is stated for the equation generally, not tied to
+internal vs. boundary control, and directly explains why item 1 above restricts
+the uniform property to 1D.
+
+**[LT06] and [BHLR10]** are cited by the thesis only as part of the space-discrete
+literature list (`introduction.tex:116`), not worked through in the thesis body —
+noted here for completeness as further references establishing/refining uniform
+controllability for the space-discrete case; their theorem statements are not
+reproduced since the thesis itself does not state them.
+
+**Gap to flag, not fill silently:** every uniform-controllability result above is
+for **space** semi-discretization only — `h → 0` with time kept continuous
+(`φ_h′(t)=−A_h^Tφ_h(t)`, `t` continuous throughout). No joint `(h,k)` fully-discrete
+uniform-controllability theorem is stated in the thesis body. This is consistent
+with, and should be read alongside, the open `(h,k)`-scaling question already
+flagged in the "Cross-check" section below (the condition-number result `ν_a` is
+`ε`-only, and a proven `(h,k)` joint scaling law remains open research) — the two
+gaps reinforce each other and should not be presented as separately resolved.
+
+### 6.3 Other formulations (brief, not pursued here)
+
+Not used in this work — noted only for completeness, per the literature review
+already quoted in full in §6.1. **Time-discrete**: a genuine negative result, not a
+milder version of the space-discrete case above — [Zh08] shows the time-semi-discrete
+multi-dimensional heat equation is in general neither null nor approximately
+controllable, and [BHS20]'s Carleman estimates for the time-discrete operator give
+only "another sense of controllability," not the same uniform-observability
+property. **Fully-discrete**: results are scarce; [CHS21] proves null
+controllability for a family of 1D parabolic equations via Carleman inequalities,
+again only "in terms of certain relaxed sense of controllability."
+
+---
+
+## 7. Known theoretical/numerical issues
 
 ### Internal control
 
@@ -380,7 +733,7 @@ controllers for the heat equation on a finite interval*, arXiv 2021.
 
 ---
 
-## 7. Chapter 3 aside — state-positivity / constrained controllability
+## 8. Chapter 3 aside — state-positivity / constrained controllability
 
 Flagged throughout as **related but not implemented** in `HUM Code/` (which
 implements unconstrained/penalized HUM only).
@@ -425,9 +778,29 @@ controllability); **[CCG05]**, **[MRR16]** (negative results, n≥2, time-only
 controls); **[GTGT77]** Gilbarg-Trudinger (elliptic regularity ensuring the
 steady-state set is nonempty, p.32).
 
+**Hidden Parabolic Regularity** (Appendix A.2, "On the construction of regular
+controls," `apendixA.tex:160-283`, cross-referenced from §1 above) — technical
+machinery specific to this Ch. 3 constrained thread, used to upgrade an `L²` null
+control into a higher-regularity (e.g. `L∞`) control on an extended/localized
+domain:
+
+> "Let p ∈ [1,∞] and δ ∈ (0,T), consider the Banach space
+> `X^p(δ,T;𝒪) := {u ∈ L^p(δ,T;W^{2,p}(𝒪)), u_t ∈ L^p((δ,T)×𝒪)}`. If `𝒱 ⊂ 𝒪` is an
+> open subset and ε > 0, we denote
+> `𝒱_ε := {x ∈ 𝒱 : dist(x, 𝒪\𝒱̄) > ε}`. Assume `u ∈ L²(0,T;H¹₀(𝒪))` and
+> `u_t ∈ L²(0,T;H⁻¹(𝒪))` solves `u_t − ∆u = f` in `𝒪×(0,T)`, `u=0` on `∂𝒪×(0,T)`,
+> `u(0,x)=u⁰(x)`, where `f ∈ L²(𝒪×(0,T))`. Then we have, for p > 2, if
+> `f ∈ L^p(𝒱×(0,T))`, then for every ε > 0 and δ ∈ (0,T), `u ∈ X^p(δ;T,𝒱_ε)`.
+> Moreover, if `p > N+2`, we have `u ∈ L∞(δ,T;W^{1,∞}(𝒱_ε))`." (Proposition
+> `prop:4.2`, `apendixA.tex:211-231`)
+
+Citation: **[GT07]** = González-Burgos, M. & de Teresa, L., *Some results on
+controllability for linear and nonlinear heat equations in unbounded domains*,
+Advances in Differential Equations, 2007 — cited via `[Proposition 4.2]{gonzalez2007some}`.
+
 ---
 
-## 8. Other foundational citations for completeness
+## 9. Other foundational citations for completeness
 
 - **Origin of HUM**: **[Rus90]** = David L. Russell's review of J.-L. Lions,
   *Contrôlabilité exacte, perturbations et stabilisation de systèmes distribués*,
@@ -440,8 +813,21 @@ steady-state set is nonempty, p.32).
   equation and the observability inequality via Carleman estimates (pp.25-26,
   49-50).
 - **Lebeau–Robbiano**: confirmed **not cited anywhere** in this thesis (full-text
-  search). If `Docs/` wants it for completeness on spectral/approximate
-  controllability, it must be added independently, not attributed to the thesis.
+  search). **Gap in the thesis, now filled independently — not from the thesis:**
+  the Lebeau–Robbiano spectral inequality is added here for completeness — a
+  spectral inequality for the Dirichlet Laplacian's eigenfunctions on a bounded
+  domain, of the form `‖u‖²_{L²(Ω)} ≤ C e^{Cλ} ‖u‖²_{L²(ω)}` for any
+  eigenfunction-combination `u` with eigenvalues `≤ λ` and any open `ω ⊂ Ω`, which
+  yields the null controllability (from any open subset `ω`, any time `T>0`) of the
+  heat equation via a Lebeau–Robbiano-type iterative/telescoping argument — an
+  alternative route to the Carleman-estimate route the thesis actually uses
+  ([AVOY96]). Citation: **[LR95]** = Lebeau, G. & Robbiano, L., *Contrôle exact de
+  l'équation de la chaleur*, Communications in Partial Differential Equations, 20
+  (1-2), 1995. As with the other independently-added results in this document, the
+  spectral-inequality statement above is standard-form, not a page-verified quote
+  from the original paper (unlike the thesis quotes elsewhere, which were checked
+  line-by-line against the LaTeX/PDF source) — no specific theorem/page number is
+  claimed.
 - **Numerical HUM origin (wave equation)**: **[GLL90]** = Glowinski, Li & Lions,
   *A numerical approach to the exact boundary controllability of the wave equation
   (I)*, 1990 — p.9, the pioneering numerical-HUM work (wave equation), "treated as
@@ -459,15 +845,23 @@ steady-state set is nonempty, p.32).
   *"[Cor07, Theorem 1.16]"*); **[Zab20]** = Zabczyk, *Mathematical Control
   Theory*, 2020; **[Zua02]** = Zuazua's 2002 survey/lecture notes (repeatedly used
   for uniform-controllability discussion).
-- **Discrete-continuous bridge**: **[LZ98]** = López & Zuazua — source of
-  **Theorem 13** (discrete null controllability + convergence of discrete
-  controls, p.55-56). This is discretization content already covered by
-  `ALGORITHMS.md`'s scope, flagged here only for citation completeness.
+- **Discrete-continuous bridge**: **[LZ98]** = López, A. & Zuazua, E., *Some new
+  results related to the null controllability of the 1-d heat equation*, Séminaire
+  Équations aux Dérivées Partielles, 1998 — source of the discrete null-controllability
+  + convergence-of-discrete-controls theorem (p.55-56 in the PDF's numbering). Now
+  given **in full in §6** (the "Discrete-in-time and discrete-in-space uniform
+  controllability" section) rather than left as a citation-only stub, since the
+  document's scope now covers discrete/ODE uniform-controllability theory
+  explicitly.
 - **Ill-posedness / cost-of-control-vs-ω**: **[MZ10]** = Münch & Zuazua,
   *Numerical approximation of null controls for the heat equation: ill-posedness
   and remedies*, Inverse Problems 2010 (Remark 5, p.25-26; p.63).
 - **Approximate controllability, variational approach**: **[FPZ95]** =
   Fabre-Puel-Zuazua 1995 (p.25).
+- **Discrete Laplacian spectrum**: **[Lev07]** = LeVeque, R.J., *Finite Difference
+  Methods for Ordinary and Partial Differential Equations*, SIAM, 2007 — source of
+  the closed-form eigenvalues/eigenvectors of the semi-discrete Laplacian `A_h`
+  used in §6.2 (`[Section 3.4]{leveque2007finite}`).
 
 ---
 
@@ -514,18 +908,25 @@ doesn't misrepresent the current state of the art:
 
 ## Summary of gaps to handle explicitly in `Docs/` (not fabricate)
 
-1. No classic energy-space (`L²∩H¹₀`) well-posedness theorem is stated in the
-   thesis — if wanted, cite a standard textbook independently.
-2. No standalone "Regularity" theorem for states/controls/adjoint exists — the only
-   genuine regularity content is the one-sentence `φT∈H¹₀` remark (p.26) for
-   boundary control, and Ch. 3's `[LTZ17]`-cited control-regularity caveat (which
-   belongs to the constrained problem, not the baseline).
-3. No infinite-dimensional HUM existence/uniqueness *theorem* (as opposed to the
-   penalized-HUM route) is separately numbered — Section 2.3 develops the
-   functional directly and moves to penalization.
+1. ~~No classic energy-space (`L²∩H¹₀`) well-posedness theorem is stated in the
+   thesis.~~ **Now filled independently in §1**, citing **[Eva10, §7.1]** — not a
+   thesis result, and not page-verified against Evans' book the way thesis quotes
+   are.
+2. No standalone "Regularity" theorem for states/controls/adjoint exists in the
+   thesis — the only genuine thesis regularity content is the one-sentence
+   `φT∈H¹₀` remark (p.26) for boundary control, and Ch. 3's `[LTZ17]`-cited
+   control-regularity caveat (constrained problem, not the baseline). The
+   parabolic-smoothing piece of this gap (`y0∈L² ⇒ y(t)∈H¹₀` for `t>0`) **is now
+   filled independently in §2**, citing **[Paz12, Ch. 2]** — same caveat as above.
+3. ~~No infinite-dimensional HUM existence/uniqueness *theorem* (as opposed to the
+   penalized-HUM route) is separately numbered.~~ **Now filled independently in
+   §4**, citing **[Lio88]** (the original Lions HUM source, cited directly here for
+   the first time in this document) — same caveat as above.
 4. `k∼e^{1/ε}` is **not** a thesis result — confirmed absent; do not attribute it
-   here.
+   here. (Unaffected by this round's additions — this was never a gap to fill, it's
+   a non-result to keep excluded.)
 5. The `ε∼Ch^p` scaling is an experimental **conjecture** (p.72), not a proven
-   theorem — must be labeled as such if included.
-6. Lebeau–Robbiano is not in this thesis — add independently if desired, with its
-   own citation, not as if the thesis referenced it.
+   theorem — must be labeled as such if included. (Unaffected — stays a labeled
+   conjecture, not something to "fill in" with an independent proof.)
+6. ~~Lebeau–Robbiano is not in this thesis.~~ **Now filled independently in §9**,
+   citing **[LR95]** — same page-verification caveat as above.
