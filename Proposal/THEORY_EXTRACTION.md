@@ -2,7 +2,7 @@
 
 Source of every quote below: `SourceThesis/TesisCIMATVersionFirmada.pdf`, "Numerical
 and Constrained Controllability of the Heat Equation" (Cipriano Callejas Hernández,
-CIMAT, 2024) — Chapters 1–2, the pre-numerical theory in Chapter 4, Chapter 3, and
+CIMAT, 2024) — Chapters 1–2, the pre-numerical theory in Chapter 4, and
 Appendix A — **plus the thesis's own LaTeX source**
 (`SourceThesis/TesisLaTeXCode/`, untracked) for §6 below, which draws on material
 present in source but not in the compiled PDF's page numbering (`introduction.tex`,
@@ -18,9 +18,13 @@ algorithmic HUM variants (exact/penalized, HUM1/HUM2) — those remain
 controllability are in scope here; how to code the discretized solver is not. Exact
 quotes are used throughout, each tagged with page/equation/theorem number (or
 file:line for LaTeX-source quotes) and citation attribution. Reviewed against the
-plan's `Docs/` outline before any `.tex` is written (Step 10).
+plan's `Docs/` outline before any `.tex` is written (Step 10). **By explicit
+instruction, Chapter 3 (state-positivity / steady-state constrained
+controllability) is excluded entirely** — this document and `Docs/theory.tex`
+cover only the unconstrained/penalized HUM baseline that `HUM Code/` actually
+implements; nothing about constrained controllability appears anywhere below.
 
-Organized under the same nine headings as the plan, with **Internal** and
+Organized under the same eight headings as the plan, with **Internal** and
 **Boundary** control kept as separate sub-items wherever the theory genuinely
 differs — never blended into one generic paragraph. Per explicit instruction, the
 new discrete-controllability material in §6 treats **internal (distributed)
@@ -82,10 +86,6 @@ controllability of the 1D heat equation*, Inverse Problems, 2011; **[Eva10]** =
 Evans, PDE textbook; **[LM12]** = Lions & Magenes, *Non-Homogeneous Boundary Value
 Problems and Applications, Vol. 1*.
 
-Semilinear boundary case (Ch. 3, p.32), same transposition + fixed-point route:
-*"...by means of transposition and fixed point methods [LM12], we have
-y ∈ C([0,T];L²(Ω))."*
-
 **Gap in the thesis, now filled independently — not from the thesis:** no
 mild/semigroup well-posedness statement in the classic parabolic energy form
 `y ∈ C([0,T];L²(Ω)) ∩ L²(0,T;H¹₀(Ω))` is stated anywhere in the thesis — it
@@ -107,12 +107,6 @@ attributed to the thesis. Unlike the thesis quotes throughout this document (whi
 were verified line-by-line against the LaTeX/PDF source), this statement was not
 checked page-by-page against Evans' book in this session — it is standard material
 reproduced from memory of the textbook's structure, not a verified quote.
-
-**Cross-reference (regularity of controls, not states):** Appendix A.2 also contains
-a "Hidden Parabolic Regularity" Proposition used to upgrade an `L²` null control to
-higher (e.g. `L∞`) regularity on the control region — this is Ch. 3's constrained-
-controllability machinery (see the existing caveat in §2 below), not a general
-baseline-HUM regularity result, so it is quoted in full in §8 rather than here.
 
 ---
 
@@ -137,15 +131,6 @@ prominently in `Docs/`'s §3b.
 
 ### Shared / adjacent
 
-- Appendix A.2, "On the construction of regular controls" (p.78 onward) is
-  technical machinery for Ch. 3's *constrained* (state-positivity) problem
-  specifically, not a general HUM control-regularity result — do not cite it as if
-  it applied to the unconstrained baseline.
-- Ch. 3 Remark 7 (p.32): *"The controllability can be achieved at exactly
-  T0(y0,y1), but the controls need to have a special regularity [LTZ17, Theorem
-  4]."* — citing **[LTZ17]** = Lohéac, Trélat & Zuazua, *Minimal controllability
-  time for the heat equation under unilateral state or control constraints*, 2017.
-  Also belongs to the constrained (Ch. 3) thread, not the baseline HUM.
 - **Gap in the thesis, now filled independently — not from the thesis:** no
   parabolic-smoothing theorem is stated anywhere in the thesis text, though it is
   implicit in `D(A)=H²∩H¹₀` (p.24). The standard analytic-semigroup smoothing
@@ -169,8 +154,7 @@ prominently in `Docs/`'s §3b.
 ## 3. Controllability definitions
 
 Shared across both control types — not split, matching the thesis's own
-presentation (abstract definitions in Ch. 2, p.13-14, restated concretely for the
-boundary-controlled problem in Ch. 3, p.27-29).
+presentation (abstract definitions in Ch. 2, p.13-14).
 
 Abstract definitions (Ch. 2, p.13, unnumbered bullets immediately after Eq. 2.1):
 
@@ -194,20 +178,6 @@ approximate controllability as `R(T)=H` / `R(T)∋0` / `R(T)` dense.
 **Remark 1** (p.14): *"When there is no restriction on the norm of the given
 initial condition the above properties hold globally. If such restriction exist we
 say that the controllability holds locally."*
-
-Ch. 3 restates for the boundary-controlled heat equation (Eq. 3.1-3.2, p.27-28) and
-adds:
-
-**Definition 1** (p.29): *"We say the (3.1) is (exactly) controllable to
-y1 ∈ L²(Ω) if for any initial data y0 ∈ L²(Ω), there exist some Ty0 > 0 and control
-u ∈ L²(Σ), such that the solution of (3.1) verifies y(Ty0) = y1."*
-
-**Definition 2 (Steady-State)** (p.30, Eq. 3.5): `−∆ȳ=0` in Ω, `ȳ=ū` on `∂Ω`.
-
-**Definition 3 (Steady-State Controllability)** (p.30): *"Let y0,y1 be steady
-states of (3.1). System (3.1) is said to be exactly-steady-state controllable in
-time T > 0 if there exist a control u ∈ L²(Σ) such that the solution of (3.1)
-verifies y(x,0) = y0 and y(x,T) = y1 for all x ∈ Ω."*
 
 ---
 
@@ -307,7 +277,7 @@ Citation: **[Lio88]** = Lions, J.-L., *Contrôlabilité Exacte, Perturbations et
 Stabilisation de Systèmes Distribués, Tome 1*, Masson, 1988 — the original HUM
 source. Note: this is the first place in this document citing Lions' book
 *directly*; the thesis itself never does so — it only cites Russell's review of it
-(**[Rus90]**, §9 below). As with the other three independently-added results in
+(**[Rus90]**, §8 below). As with the other three independently-added results in
 this document, this statement was not checked page-by-page against Lions' book in
 this session (unlike the thesis quotes, which were verified line-by-line against
 the LaTeX/PDF source) — no specific theorem/page number is claimed.
@@ -591,7 +561,7 @@ stating it in theorem form):
 
 **Theorem [Null controllability] `teo:nullcontrolapprox`** (`Cap2.tex:416-430`,
 active/compiled — this is the theorem previously left as a one-line stub, "Theorem
-13," in §9 below):
+13," in §8 below):
 
 > "For any T > 0 and `y⁰_h`, there exists a control `v_h ∈ L²(0,T)` such that the
 > solution of control problem (discretePrimal)-(discreteB) satisfies `y_j(T)=0`,
@@ -676,10 +646,9 @@ this thesis** (verified by full-text search). Do not attribute that result to th
 thesis — it is only in the separate Glowinski survey paper
 (`SourceDocuments/Glowinski_and_numerical_control_problems.pdf`), which
 `ARCHITECTURE.md`/`ALGORITHMS.md` already establish is background literature, not
-implemented. The thesis's own cost-of-control results are: (a) an exponential-in-**time**
-estimate from Theorem 4's proof (Ch. 3, p.31, `‖v‖_{L∞(Σ)} ≤ e^{-2λ1T}C(T-τ)‖z0‖_{L²(Ω)}`
-— cost in `T`, not `ε`), and (b) the purely experimental control-norm blow-up as
-`ω` shrinks (Table 4.3, p.63).
+implemented. The thesis's own cost-of-control result, within the scope of this
+document, is the purely experimental control-norm blow-up as `ω` shrinks
+(Table 4.3, p.63).
 
 ### Boundary control
 
@@ -733,74 +702,7 @@ controllers for the heat equation on a finite interval*, arXiv 2021.
 
 ---
 
-## 8. Chapter 3 aside — state-positivity / constrained controllability
-
-Flagged throughout as **related but not implemented** in `HUM Code/` (which
-implements unconstrained/penalized HUM only).
-
-**Lemma 1 (Maximum principle)** (p.29), citing **[Pao12, Lemma 4.1]** — justifies
-that the state-positivity constraint (Eq. 3.3) reduces to positivity of the
-boundary control (Eq. 3.4).
-
-**Theorem 4** (p.30, linear case, full statement):
-
-> "Let y0 ∈ L²(Ω) be such that y0 ≥ 0, and let y1 ∈ L²(Ω) be a steady-state of
-> (3.1). We assume y0 ≠ y1, and that there exists ϵ > 0 such that y1 ≥ ϵ. Then,
-> there exists T0 = T0(y0,y1) > 0 such that for any T > T0, there exists a control
-> u ∈ L²(Σ) such that the corresponding solution of (3.1) is non-negative and
-> satisfies y(·,T) = y1."
-
-Proof sketch (pp.30-31): shift `z=y−y1` (Eq. 3.6); observability inequality
-(Eq. 3.7 → 3.9-3.10 via Parseval and the first Dirichlet-Laplacian eigenvalue λ1);
-regular controls via Appendix A.2; cost-of-control estimate
-`‖v‖_{L∞(Σ)} ≤ C(T)‖z0‖_{L²(Ω)}`, `C(T)=e^{-2λ1T}C(T-τ)`, `C(T)<1` for `T>T0`.
-
-**Remark 7** (p.32): the "waiting time" minimal-time phenomenon, plus the
-regularity caveat citing **[LTZ17, Theorem 4]** for controls achieving exactly
-`T0`.
-
-**Theorem 5** (p.33, semilinear staircase method, full statement):
-
-> "Let y0 and y1 be path connected bounded steady states. Assume there exists
-> ν > 0 such that ūs ≥ ν ∀s ∈ [0,1]. (3.13) Then, if T is large enough, there
-> exists u ∈ L∞(Σ) such that □ Problem (3.11) with initial datum y0 and control u
-> admits a unique solution y verifying y(·,T) = y1; □ Moreover, u ≥ 0 a.e. on
-> (0,T)."
-
-Requires **Lemma 2** (local controllability to trajectories, p.33), citing
-**[PZ18, Lemma 2.1]** = Pighin & Zuazua, *Controllability under positivity
-constraints of semilinear heat equations*, 2018.
-
-Adjacent Ch. 3 citations for context: **[CT04]** Coron-Trélat 2004 (staircase
-method origin); **[Sch80]** Schmidt 1980 (first approximate steady-state result);
-**[OY93]** Imanuvilov 1993, **[FC97]** Fernández-Cara 1997 (semilinear null
-controllability); **[CCG05]**, **[MRR16]** (negative results, n≥2, time-only
-controls); **[GTGT77]** Gilbarg-Trudinger (elliptic regularity ensuring the
-steady-state set is nonempty, p.32).
-
-**Hidden Parabolic Regularity** (Appendix A.2, "On the construction of regular
-controls," `apendixA.tex:160-283`, cross-referenced from §1 above) — technical
-machinery specific to this Ch. 3 constrained thread, used to upgrade an `L²` null
-control into a higher-regularity (e.g. `L∞`) control on an extended/localized
-domain:
-
-> "Let p ∈ [1,∞] and δ ∈ (0,T), consider the Banach space
-> `X^p(δ,T;𝒪) := {u ∈ L^p(δ,T;W^{2,p}(𝒪)), u_t ∈ L^p((δ,T)×𝒪)}`. If `𝒱 ⊂ 𝒪` is an
-> open subset and ε > 0, we denote
-> `𝒱_ε := {x ∈ 𝒱 : dist(x, 𝒪\𝒱̄) > ε}`. Assume `u ∈ L²(0,T;H¹₀(𝒪))` and
-> `u_t ∈ L²(0,T;H⁻¹(𝒪))` solves `u_t − ∆u = f` in `𝒪×(0,T)`, `u=0` on `∂𝒪×(0,T)`,
-> `u(0,x)=u⁰(x)`, where `f ∈ L²(𝒪×(0,T))`. Then we have, for p > 2, if
-> `f ∈ L^p(𝒱×(0,T))`, then for every ε > 0 and δ ∈ (0,T), `u ∈ X^p(δ;T,𝒱_ε)`.
-> Moreover, if `p > N+2`, we have `u ∈ L∞(δ,T;W^{1,∞}(𝒱_ε))`." (Proposition
-> `prop:4.2`, `apendixA.tex:211-231`)
-
-Citation: **[GT07]** = González-Burgos, M. & de Teresa, L., *Some results on
-controllability for linear and nonlinear heat equations in unbounded domains*,
-Advances in Differential Equations, 2007 — cited via `[Proposition 4.2]{gonzalez2007some}`.
-
----
-
-## 9. Other foundational citations for completeness
+## 8. Other foundational citations for completeness
 
 - **Origin of HUM**: **[Rus90]** = David L. Russell's review of J.-L. Lions,
   *Contrôlabilité exacte, perturbations et stabilisation de systèmes distribués*,
@@ -914,10 +816,9 @@ doesn't misrepresent the current state of the art:
    are.
 2. No standalone "Regularity" theorem for states/controls/adjoint exists in the
    thesis — the only genuine thesis regularity content is the one-sentence
-   `φT∈H¹₀` remark (p.26) for boundary control, and Ch. 3's `[LTZ17]`-cited
-   control-regularity caveat (constrained problem, not the baseline). The
-   parabolic-smoothing piece of this gap (`y0∈L² ⇒ y(t)∈H¹₀` for `t>0`) **is now
-   filled independently in §2**, citing **[Paz12, Ch. 2]** — same caveat as above.
+   `φT∈H¹₀` remark (p.26) for boundary control. The parabolic-smoothing piece of
+   this gap (`y0∈L² ⇒ y(t)∈H¹₀` for `t>0`) **is now filled independently in §2**,
+   citing **[Paz12, Ch. 2]** — same caveat as above.
 3. ~~No infinite-dimensional HUM existence/uniqueness *theorem* (as opposed to the
    penalized-HUM route) is separately numbered.~~ **Now filled independently in
    §4**, citing **[Lio88]** (the original Lions HUM source, cited directly here for
@@ -928,5 +829,5 @@ doesn't misrepresent the current state of the art:
 5. The `ε∼Ch^p` scaling is an experimental **conjecture** (p.72), not a proven
    theorem — must be labeled as such if included. (Unaffected — stays a labeled
    conjecture, not something to "fill in" with an independent proof.)
-6. ~~Lebeau–Robbiano is not in this thesis.~~ **Now filled independently in §9**,
+6. ~~Lebeau–Robbiano is not in this thesis.~~ **Now filled independently in §8**,
    citing **[LR95]** — same page-verification caveat as above.

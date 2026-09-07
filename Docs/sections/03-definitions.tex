@@ -40,28 +40,3 @@ symbol, different role.)
   properties in Definition~\ref{def:controllability} hold \emph{globally};
   under such a restriction, controllability holds only \emph{locally}.
 \end{remark}
-
-\subsection*{Steady-state controllability (constrained-problem aside)}
-
-For the constrained/steady-state problem of Section~\ref{sec:constrained-aside}
-the thesis restates controllability more concretely for the
-boundary-controlled equation and adds:
-
-\begin{definition}
-  System \eqref{eq:heat-boundary} is (exactly) controllable to
-  $y_1 \in L^2(\Omega)$ if, for every $y_0 \in L^2(\Omega)$, there exist
-  $T_{y_0}>0$ and $u \in L^2(\Sigma)$ such that the solution satisfies
-  $y(T_{y_0}) = y_1$.
-\end{definition}
-
-\begin{definition}[Steady state]
-  $\bar y$ is a steady state of \eqref{eq:heat-boundary} if $-\Delta\bar y = 0$
-  in $\Omega$, $\bar y = \bar u$ on $\partial\Omega$.
-\end{definition}
-
-\begin{definition}[Steady-state controllability]
-  Let $y_0,y_1$ be steady states. System \eqref{eq:heat-boundary} is
-  exactly-steady-state controllable in time $T>0$ if there exists
-  $u \in L^2(\Sigma)$ such that the solution satisfies $y(\cdot,0)=y_0$ and
-  $y(\cdot,T)=y_1$.
-\end{definition}
