@@ -1,0 +1,84 @@
+\section{Aside: state-positivity and constrained controllability}
+\label{sec:constrained-aside}
+
+This section is \textbf{related but not implemented} here: it summarizes a
+separate, constrained-controllability thread from the same source material,
+included only because two results from it are cited elsewhere in this
+document (Section~\ref{sec:regularity}, Remark~\ref{rem:coercivity-space}).
+It is not developed with the same depth as the unconstrained internal-control
+theory above, and boundary control (the setting in which the thesis develops
+it) is used here without further internal-control specialization.
+
+\begin{lemma}[Maximum principle]
+  The state-positivity constraint reduces to positivity of the boundary
+  control \citep[Lem.~4.1]{pao2012nonlinear}.
+\end{lemma}
+
+\begin{theorem}[Positivity-constrained steady-state control, linear case]
+  \label{thm:constrained-linear}
+  Let $y_0 \in L^2(\Omega)$, $y_0 \ge 0$, and let $y_1 \in L^2(\Omega)$ be a
+  steady state with $y_0 \ne y_1$ and $y_1 \ge \epsilon$ for some
+  $\epsilon>0$. Then there exists $T_0 = T_0(y_0,y_1)>0$ such that, for every
+  $T>T_0$, there is a control $u \in L^2(\Sigma)$ for which the corresponding
+  solution of \eqref{eq:heat-boundary} is non-negative and satisfies
+  $y(\cdot,T) = y_1$.
+\end{theorem}
+
+The proof shifts $z = y - y_1$ (so $z_0 := z(\cdot,0) = y_0-y_1$), uses an
+observability inequality via Parseval and the first Dirichlet-Laplacian
+eigenvalue $\lambda_1$ (of $-\Delta$ on $\Omega$ with homogeneous Dirichlet
+boundary conditions), invokes the higher-regularity control construction
+below, and gives the cost estimate
+$\|v\|_{L^\infty(\Sigma)} \le C(T)\|z_0\|_{L^2(\Omega)}$,
+$C(T)=e^{-2\lambda_1 T}C(T-\tau) < 1$ for $T>T_0$ and some intermediate time
+$\tau \in (0,T)$.
+
+\begin{remark}
+  A ``waiting time'' phenomenon governs the minimal achievable time $T_0$;
+  controls achieving exactly $T_0$ need special regularity
+  \citep[Thm.~4]{loheac2017minimal}.
+\end{remark}
+
+\begin{theorem}[Semilinear staircase method]
+  Let $y_0,y_1$ be path-connected bounded steady states with a connecting
+  family $\bar u_s \ge \nu > 0$, $s\in[0,1]$. For $T$ large enough there is
+  $u \in L^\infty(\Sigma)$, $u\ge0$ a.e., such that the corresponding solution
+  of the semilinear equation satisfies $y(\cdot,T)=y_1$.
+\end{theorem}
+This requires local controllability to trajectories
+\citep[Lem.~2.1]{pighin2017controllability}; the staircase method itself
+originates in \citet{coron2004global}, building on the first approximate
+steady-state result of \citet{schmidt1980boundary}. Adjacent results in this
+thread include semilinear null controllability
+\citep{fernandez1997null,emanuilov1993boundary}, negative results for
+$n\ge2$ with time-only controls \citep{chitour2005conditions,martin2016reachable},
+and the elliptic regularity ensuring the steady-state set is nonempty
+\citep{gilbarg1977elliptic}.
+
+\begin{proposition}[Hidden parabolic regularity]
+  \label{prop:hidden-regularity}
+  Let $N\in\mathbb{N}$, let $\mathcal{O}\subseteq\R^N$ be open (the ambient,
+  possibly extended domain of this proposition -- $N$ here is the spatial
+  dimension, unrelated to the mesh-count $N$ of Section~\ref{sec:discrete}),
+  let $p\in[1,\infty]$, $\delta\in(0,T)$, and
+  $X^p(\delta,T;\mathcal{O}) := \{u \in L^p(\delta,T;W^{2,p}(\mathcal{O})) :
+  u_t \in L^p((\delta,T)\times\mathcal{O})\}$. For an open
+  $\mathcal{V}\subset\mathcal{O}$ and $\epsilon>0$, let
+  $\mathcal{V}_\epsilon := \{x\in\mathcal{V} :
+  \operatorname{dist}(x,\mathcal{O}\setminus\overline{\mathcal V})>\epsilon\}$.
+  If $u\in L^2(0,T;H^1_0(\mathcal O))$, $u_t\in L^2(0,T;H^{-1}(\mathcal O))$
+  solves $u_t-\Delta u = f$ in $\mathcal O\times(0,T)$, $u=0$ on
+  $\partial\mathcal O\times(0,T)$, with $f\in L^2(\mathcal O\times(0,T))$,
+  then for $p>2$: $f\in L^p(\mathcal V\times(0,T))$ implies, for every
+  $\epsilon>0$ and $\delta\in(0,T)$, $u \in X^p(\delta;T,\mathcal V_\epsilon)$;
+  and if $p>N+2$, $u \in L^\infty(\delta,T;W^{1,\infty}(\mathcal V_\epsilon))$.
+\end{proposition}
+\begin{proof}[Source]
+  \citet[Prop.~4.2]{gonzalez2007some}.
+\end{proof}
+
+This proposition -- used, via an extended-domain and localization argument,
+to upgrade an $L^2$ null control into a higher-regularity control on the
+control region -- is technical machinery specific to this constrained
+thread, and should not be cited as if it applied to the unconstrained
+baseline theory of the preceding sections.

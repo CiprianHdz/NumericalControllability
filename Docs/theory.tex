@@ -1,0 +1,82 @@
+\documentclass[11pt]{article}
+
+% ---------------------------------------------------------------------------
+% Docs/theory.tex -- self-contained theoretical companion for the HUM (Hilbert
+% Uniqueness Method) approach to controllability of the 1D heat equation.
+%
+% Source: Proposal/THEORY_EXTRACTION.md (the signed-off extraction of theory
+% from Cipriano Callejas Hernandez's 2024 CIMAT MSc thesis, "Numerical and
+% constrained controllability of the heat equation", plus independently-cited
+% standard results explicitly marked as such throughout). Internal
+% (distributed) control is treated as the primary case; boundary control
+% appears only as an explicit point of contrast, per that document's scope.
+%
+% Build: `make` in this directory (see Makefile), or directly:
+%   latexmk -pdf theory.tex
+% ---------------------------------------------------------------------------
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm, mathtools}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true, linkcolor=blue!50!black, citecolor=blue!50!black,
+            urlcolor=blue!50!black]{hyperref}
+\usepackage[round]{natbib}
+
+% --- Theorem-like environments -------------------------------------------
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% --- Convenience macros -----------------------------------------------------
+\newcommand{\R}{\mathbb{R}}
+\DeclareMathOperator{\rank}{rank}
+
+\title{The Hilbert Uniqueness Method for Internal Control of the\\
+  One-Dimensional Heat Equation: A Theoretical Companion}
+\author{Compiled from Cipriano Callejas Hern\'andez's CIMAT MSc thesis\\
+  and independently-cited standard results (see text)}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+This document collects, with precise statements and citations, the continuous
+and discrete controllability theory underlying the Hilbert Uniqueness Method
+(HUM) applied to \emph{internal} (distributed) control of the one-dimensional
+heat equation, together with the finite-dimensional (ODE) controllability
+results that justify passing from the continuous problem to a semi-discrete
+one. Boundary control is discussed only where it clarifies a genuine point of
+contrast with the internal case. Results are drawn from Callejas
+Hern\'andez's 2024 CIMAT thesis, \emph{Numerical and constrained
+controllability of the heat equation}, whenever available; every result
+\emph{not} found there is cited independently and marked as such, never
+attributed to the thesis. Open questions and known limitations are stated
+explicitly rather than smoothed over.
+\end{abstract}
+
+\tableofcontents
+
+\input{sections/01-wellposedness}
+\input{sections/02-regularity}
+\input{sections/03-definitions}
+\input{sections/04-hum-duality}
+\input{sections/05-penalized-hum}
+\input{sections/06-discrete-controllability}
+\input{sections/07-known-issues}
+\input{sections/08-constrained-aside}
+
+\bibliographystyle{abbrvnat}
+\bibliography{theory}
+
+\end{document}

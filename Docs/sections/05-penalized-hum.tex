@@ -1,0 +1,123 @@
+\section{Penalized HUM: convergence and threshold results}
+\label{sec:penalized}
+
+To obtain a well-posed minimization even when the unpenalized functional $J$
+of \eqref{eq:pde-functional} is not coercive on $H$, one instead minimizes the
+penalized functional
+\begin{equation}
+  \label{eq:penalized-functional}
+  J_\varepsilon(g) = \tfrac12 a(g,g) + \langle y_0,\varphi_g(0)\rangle
+    + \varepsilon\|g\|_H, \qquad \varepsilon>0.
+\end{equation}
+
+\begin{proposition}[Critical-point inequality]
+  \label{prop:critical-point}
+  If $J_\varepsilon$ attains its minimum at $\hat g \in H$, then for every
+  $\xi \in H$,
+  \[
+    a(\hat g,\xi) + \langle y_0,\varphi_\xi(0)\rangle \le \varepsilon\|\xi\|_H,
+  \]
+  and consequently the controlled solution satisfies
+  $\|y_{\hat v}(T)\| \le \varepsilon$, where $\hat v = B^*\hat\varphi$.
+\end{proposition}
+
+\begin{proposition}[Penalized-HUM duality]
+  \label{prop:penalized-duality}
+  Let $F_\varepsilon(v) := F_1(v) + \tfrac{1}{2\varepsilon}\|y_v(T)\|_H$
+  (the primal functional). Then
+  $F_\varepsilon(\hat v) = -J_\varepsilon(\hat g)$, a consequence of the
+  Fenchel--Rockafellar duality theorem \citep{ekeland1999convex} that also
+  holds for $\varepsilon=0$. Moreover $y(T;y_0,\hat v) = -\varepsilon\hat g$,
+  $\|y(T;y_0,\hat v)\|_H \le \|y(T;y_0,0)\|_H$, and
+  $\|\hat g\|_H \le \tfrac1\varepsilon\|y(T;y_0,0)\|_H$.
+\end{proposition}
+\begin{proof}[Source]
+  \citet[Prop.~1.5]{boyer2013penalised}.
+\end{proof}
+
+\begin{theorem}[Convergence as $\varepsilon\to0$]
+  \label{thm:penalized-convergence}
+  Let $y_\varepsilon(T)$ be the state reached by the penalized-HUM control
+  $v_\varepsilon = \hat v(\varepsilon)$. Then
+  \[
+    y_\varepsilon(T) \to \mathbb{P}_{Q_F}\big(y_f(T)\big) \ \text{as } \varepsilon\to0,
+  \]
+  where $Q_F := \{g : B^*\varphi_g \equiv 0 \text{ on } (0,T)\} = \ker\Lambda$
+  is the set of non-observable states, $\mathbb{P}_{Q_F}$ is the orthogonal
+  projection onto $Q_F$, and $y_f = y(\cdot\,;y_0,0)$ is the free solution. In
+  particular, if $Q_F = \{0\}$ then $y_\varepsilon(T) \to 0$.
+\end{theorem}
+\begin{proof}[Source]
+  \citet[Thm.~1.11]{boyer2013penalised}.
+\end{proof}
+
+\begin{proposition}
+  \label{prop:penalized-strong-conv}
+  \begin{enumerate}[label=(\roman*)]
+    \item If the primal system is approximately or null controllable, then
+      $y(T;y_0,\hat v_\varepsilon) \to 0$ as $\varepsilon \to 0$.
+    \item If the primal system is null controllable, then
+      $v_\varepsilon \to v^0$ strongly in $L^2(0,T;U)$ as $\varepsilon\to0$,
+      where $v^0$ is the minimal-norm null control (null controllability is
+      needed for the strong convergence, since it guarantees
+      $\inf_{L^2(0,T;U)}F_\varepsilon < \infty$ as $\varepsilon\to0$).
+  \end{enumerate}
+\end{proposition}
+\begin{proof}[Source]
+  \citet[Prop.~1.7]{boyer2013penalised}.
+\end{proof}
+
+\begin{remark}
+  In finite dimension, $Q_F$ is the kernel of the adjoint Kalman matrix $K^*$
+  of Theorem~\ref{thm:kalman}; hence $Q_F=\{0\}$ if and only if the Kalman
+  rank condition holds.
+\end{remark}
+
+\subsection{Internal control}
+
+Propositions~\ref{prop:pde-gramian}--\ref{prop:penalized-strong-conv} apply
+directly to internal control over $H=L^2(0,1)$; nothing further is added
+beyond this general machinery.
+
+\subsection{Boundary control}
+
+The same machinery restates over $H^1_0/H^{-1}$ per Remark~\ref{rem:boundary-h10}.
+The condition-number result below is stated once, generically, and applies to
+whichever Gramian is in play (internal or boundary).
+
+\begin{proposition}[Condition number of the penalized Gramian]
+  \label{prop:condition-number}
+  With $\Lambda_\varepsilon := \Lambda + \varepsilon I$,
+  $\|\Lambda_\varepsilon\| = \varepsilon + \|\Lambda\|$ and
+  $\|\Lambda_\varepsilon^{-1}\| = \varepsilon^{-1}$, so the condition number of
+  $\Lambda_\varepsilon$ is
+  \[
+    \nu_a = 1 + \frac{1}{\varepsilon}\|\Lambda\|.
+  \]
+\end{proposition}
+
+\begin{theorem}[Conjugate-gradient convergence rate]
+  \label{thm:cg-rate}
+  The conjugate-gradient iterates $\{u_n\}_{n\ge1}$ for minimizing the
+  bilinear form $a(\cdot,\cdot)$ satisfy
+  \[
+    \|u_n - u\| \le C\|u_0-u\|
+      \left(\frac{\sqrt{\nu_a}-1}{\sqrt{\nu_a}+1}\right)^n, \qquad n\ge1,
+  \]
+  where $\nu_a = \|\Lambda\|\|\Lambda^{-1}\|$ is the condition number of
+  $a(\cdot,\cdot)$: convergence is faster the closer $u_0$ is to $u$, and the
+  closer $\sqrt{\nu_a}$ is to $1$.
+\end{theorem}
+\begin{proof}[Source]
+  \citet{glowinski2008lectures}.
+\end{proof}
+
+\begin{remark}
+  No further quantitative threshold or error-rate result exists beyond
+  Proposition~\ref{prop:condition-number} and Theorem~\ref{thm:cg-rate}. A
+  scaling law $\varepsilon \sim Ch^p$ (for a mesh-refinement parameter $h$,
+  diffusion coefficient $\alpha$, and $p$ larger than the scheme's order of
+  accuracy) is reported, but only as an \textbf{experimental conjecture} from
+  numerical observation, not a proven theorem, and is labeled as such
+  wherever referenced.
+\end{remark}

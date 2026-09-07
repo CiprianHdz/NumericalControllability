@@ -1,0 +1,175 @@
+\section{HUM duality theory}
+\label{sec:hum-duality}
+
+\subsection{The finite-dimensional (ODE) prototype}
+\label{ssec:ode-prototype}
+
+The infinite-dimensional theory below generalizes a finite-dimensional
+template for the linear ODE system
+\begin{equation}
+  \label{eq:ode-system}
+  y'(t) = Ay(t) + Bv(t) \ \text{in } (0,T), \qquad y(0) = y_0,
+\end{equation}
+with $n,m \in \mathbb{N}$ (the state and control dimensions),
+$A \in \R^{n\times n}$, $B \in \R^{n\times m}$, $y : [0,T]\to\R^n$,
+$v \in L^2(0,T;\R^m)$. This template is stated here in full because it is the
+direct prerequisite for the discrete/ODE uniform-controllability theory of
+Section~\ref{sec:discrete}: a space semi-discretization reduces the PDE
+control problem to exactly this ODE setting.
+
+\begin{theorem}[Kalman rank condition]
+  \label{thm:kalman}
+  Let $K = [B, AB, \dots, A^{n-1}B]$. System \eqref{eq:ode-system} is exactly
+  controllable in every time $T>0$ if and only if $\rank K = n$.
+\end{theorem}
+\begin{proof}[Source]
+  \citet[Thm.~1.16]{coron2007control}.
+\end{proof}
+
+The adjoint system of \eqref{eq:ode-system} is
+\begin{equation}
+  \label{eq:ode-adjoint}
+  \varphi'(t) = -A^*\varphi(t) \ \text{in } (0,T), \qquad \varphi(T) = \varphi_T.
+\end{equation}
+
+\begin{theorem}[Controllability $\Leftrightarrow$ observability]
+  \label{thm:ode-observability}
+  System \eqref{eq:ode-system} is controllable in time $T$ if and only if the
+  adjoint system \eqref{eq:ode-adjoint} is \emph{observable} in time $T$, i.e.\
+  there exists $C=C(T)>0$ such that, for every solution $\varphi$ of
+  \eqref{eq:ode-adjoint},
+  \begin{equation}
+    \label{eq:ode-observability-ineq}
+    |\varphi(0)|^2_{\R^n} \le C\int_0^T |B^*\varphi(t)|^2_{\R^m}\,dt.
+  \end{equation}
+  Both properties hold in every time $T$ if and only if the Kalman rank
+  condition (Theorem~\ref{thm:kalman}) holds.
+\end{theorem}
+\begin{proof}[Source]
+  \citet[Thm.~2.1.1]{zuazua2002controllability}.
+\end{proof}
+
+\begin{theorem}[HUM control, finite-dimensional]
+  \label{thm:ode-hum}
+  Let $\mathcal{J}: \R^n \to \R$,
+  $\mathcal{J}(\varphi_T) = \tfrac12\int_0^T |B^*\varphi|^2 + (y_0,\varphi(0))$,
+  where $\varphi$ solves \eqref{eq:ode-adjoint} with $\varphi(T)=\varphi_T$.
+  If $\mathcal{J}$ has a minimizer $\hat\varphi_T$, then, letting $\hat\varphi$
+  solve \eqref{eq:ode-adjoint} with $\hat\varphi(T)=\hat\varphi_T$, the control
+  $v = B^*\hat\varphi$ is the minimal-$L^2$-norm control steering
+  \eqref{eq:ode-system} from $y_0$ to $0$ at time $T$.
+\end{theorem}
+
+The construction hinges on the \emph{Gramian operator}
+\begin{equation}
+  \label{eq:ode-gramian}
+  \Lambda: \R^n \to \R^n, \qquad
+  \Lambda(g) := \int_0^T B^*\varphi_g(s)\,ds,
+\end{equation}
+where $\varphi_g$ solves \eqref{eq:ode-adjoint} with final datum $g$; $\Lambda$
+is well defined by duality \citep{boyer2013penalised}. This is the same
+Gramian apparatus used below for the PDE-level construction, over $\R^n$
+instead of an infinite-dimensional Hilbert space.
+
+\subsection{Infinite-dimensional generalization}
+\label{ssec:hum-infinite}
+
+In the PDE setting the Kalman rank condition has no direct analogue; more
+delicate tools are needed, and in general exact controllability of the heat
+equation fails while approximate controllability holds
+\citep{zuazua2002controllability} -- see also \citet{coron2007control,
+zabczyk2020mathematical} for the general control-theoretic background this
+document draws on. Approximate controllability of the 1D heat equation can
+also be established directly via a variational approach
+\citep{fabre1995approximate}, as an alternative to the HUM route developed
+below. Nonetheless the HUM construction extends: with $H$, $U$ the state and
+control spaces of Section~\ref{sec:wellposedness}, and adjoint system in $H$,
+\begin{equation}
+  \label{eq:pde-adjoint}
+  \varphi'(t) = -A^*\varphi(t) \ \text{in } (0,T), \qquad \varphi(T) = g \in H,
+\end{equation}
+
+\subsubsection*{Internal control}
+
+\begin{proposition}
+  \label{prop:pde-gramian}
+  The Gramian $\Lambda: H \to L^2(0,T;U)$ is a positive-definite, symmetric,
+  bounded linear operator \citep{boyer2013penalised}, giving rise to the
+  bilinear form and dual functional
+  \begin{equation}
+    \label{eq:pde-functional}
+    a(g,\xi) = \int_0^T B^*\varphi_g \cdot B^*\varphi_\xi\,dt, \qquad
+    J(g) = \tfrac12 a(g,g) + \langle y_0, \varphi_g(0)\rangle,
+  \end{equation}
+  with $\langle\cdot,\cdot\rangle$ the $H\times H'$ duality pairing. For
+  internal control, $H = U = L^2(0,1)$ and $B^* = B = \mathbf{1}_\omega$.
+\end{proposition}
+
+The thesis develops \eqref{eq:pde-functional} directly and moves to
+\emph{penalized} HUM (Section~\ref{sec:penalized}) as its route to a
+well-posed minimization, rather than stating a standalone
+existence/uniqueness theorem for the unpenalized functional.
+
+\begin{remark}[Gap in the thesis, now filled independently -- not from the
+  thesis]
+  \label{rem:hum-existence}
+  The classical existence/uniqueness argument for the unpenalized
+  infinite-dimensional minimizer is the original Lions completion-space
+  construction. Let
+  $F := $ the completion of $H$ with respect to the seminorm
+  $\|g\|_F := a(g,g)^{1/2}$. If this seminorm is genuinely a norm on $H$ --
+  equivalent to a unique-continuation property for \eqref{eq:pde-adjoint}
+  ($B^*\varphi_g \equiv 0$ on $(0,T) \Rightarrow g=0$) -- then $H$ embeds
+  continuously and densely into $F$, the linear form
+  $g \mapsto -\langle y_0,\varphi_g(0)\rangle$ extends continuously to $F$,
+  and Riesz representation on the Hilbert space $F$ yields a unique
+  $\hat g \in F$ minimizing $J$ over $F$. This formalizes what the thesis's
+  Remark~\ref{rem:coercivity-space} (Section~\ref{sec:known-issues}) describes
+  informally as ``the space where $J$ is coercive.''
+  Citation: \citet{lions1988controlabilite} -- the original HUM source. This
+  is the first citation of Lions' book \emph{directly} in this document; the
+  thesis itself cites it only indirectly, via \citealp{russell1990j}'s review
+  of it. As with Remarks~\ref{rem:energy-wellposedness} and~\ref{rem:smoothing},
+  no specific page/theorem number is claimed here.
+\end{remark}
+
+\begin{theorem}[Observability inequality, internal control]
+  \label{thm:internal-observability}
+  If there exists $C>0$ such that
+  \begin{equation}
+    \label{eq:internal-observability}
+    |\varphi(\cdot,0)|^2_{L^2(0,1)} \le
+    C \int_0^1\!\int_0^T |\mathbf{1}_\omega\varphi|^2\,dx\,dt,
+  \end{equation}
+  then $J$ is coercive.
+\end{theorem}
+
+\begin{remark}
+  The proof of \eqref{eq:internal-observability} itself requires Carleman
+  estimates and is deferred to \citet{fursikov1996imanuvilov}.
+\end{remark}
+
+\begin{remark}[Gap in the thesis, now filled independently -- not from the
+  thesis: an alternative route]
+  \label{rem:lebeau-robbiano}
+  Carleman estimates are not the only route to
+  \eqref{eq:internal-observability}. The Lebeau--Robbiano spectral inequality
+  \[
+    \|u\|^2_{L^2(\Omega)} \le C e^{C\lambda}\|u\|^2_{L^2(\omega)}
+  \]
+  -- valid for any finite combination $u$ of Dirichlet-Laplacian
+  eigenfunctions with eigenvalues $\le\lambda$, and any open $\omega\subset
+  \Omega$ -- yields null controllability of the heat equation from any open
+  subset, in any time $T>0$, via an iterative/telescoping argument
+  \citep{lebeau1995controle}. This citation, like
+  Remarks~\ref{rem:energy-wellposedness}, \ref{rem:smoothing}
+  and~\ref{rem:hum-existence}, is standard-form and was not verified
+  page-by-page against the original paper.
+\end{remark}
+
+\subsubsection*{Boundary control}
+
+Per Remark~\ref{rem:boundary-h10}, the boundary dual functional
+$J_b(\varphi_T)$ lives over $\varphi_T \in H^1_0(0,1)$ rather than
+$L^2(0,1)$. No further boundary-specific infinite-dimensional HUM theorem is
+stated beyond the general development above.

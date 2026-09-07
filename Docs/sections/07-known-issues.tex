@@ -1,0 +1,71 @@
+\section{Known theoretical and numerical issues}
+\label{sec:known-issues}
+
+\subsection{Internal control}
+
+\begin{remark}[Ill-posedness of the unpenalized minimization]
+  \label{rem:coercivity-space}
+  The space on which $J$ (Proposition~\ref{prop:pde-gramian}) is coercive is
+  much larger than $L^2(0,1)$: it is the completion of $L^2(0,1)$ with respect
+  to the norm
+  $\big(\tfrac12\int_0^1\!\int_0^T|\mathbf{1}_\omega\varphi|^2\,dx\,dt\big)^{1/2}$
+  -- exactly the space $F$ of Remark~\ref{rem:hum-existence}. This space can
+  hardly be approximated by a finite-dimensional basis
+  \citep{munch2010numerical}, which is why the numerical problem of minimizing
+  the dual functional is intrinsically ill-posed.
+\end{remark}
+
+Two genuine cost-of-control results appear in the source material: an
+exponential-in-\emph{time} estimate,
+$\|v\|_{L^\infty(\Sigma)} \le e^{-2\lambda_1 T}C(T-\tau)\|z_0\|_{L^2(\Omega)}$
+(here $\lambda_1$ is the first Dirichlet-Laplacian eigenvalue on $\Omega$,
+$z_0$ the shifted initial datum, and $\tau$ an intermediate time -- all from
+the proof of Theorem~\ref{thm:constrained-linear} in
+Section~\ref{sec:constrained-aside}, cost in $T$, not in $\varepsilon$), and a
+purely \emph{experimental} control-norm blow-up as the control region $\omega$
+shrinks. No exponential-in-$\varepsilon$ blow-up result
+(of the form $k\sim e^{1/\varepsilon}$, sometimes seen in the wider numerical
+HUM literature) is established in the source material used here, and none is
+claimed.
+
+\begin{remark}[Gramian conditioning vs.\ control-region geometry]
+  \label{rem:gramian-geometry}
+  Although the literature guarantees exact/null controllability for
+  internal control on any open $\omega$, with no restriction on its geometry
+  \citep{zuazua2002controllability}, the condition number of the Gramian
+  $\Lambda$ depends strongly on the location of $\omega$; when discretized in
+  space, $\Lambda_N$, it blows up as $N$ increases and $\omega$ shrinks
+  \citep{munch2011optimal}.
+\end{remark}
+
+\begin{remark}[Time-integrator sensitivity]
+  Convergence of the numerical HUM method is highly sensitive to the choice
+  of time integrator; explicit schemes blow up for most mesh-parameter pairs,
+  even when the underlying finite-difference scheme is convergent and
+  uniformly controllable (Section~\ref{sec:discrete}). Gradient-type
+  optimization methods can likewise fail even under those same favorable
+  conditions; preconditioning or other iterative methods for the resulting
+  large linear systems are a natural, and currently active, avenue for
+  improving conjugate-gradient convergence (Theorem~\ref{thm:cg-rate}).
+\end{remark}
+
+\begin{remark}[Regularity of the adjoint state and the penalization norm]
+  There is a strong dependency between the regularity of the adjoint state
+  and the minimizer of the dual functional: different choices of penalization
+  norm produce genuinely different solution behavior
+  \citep{kindermann1999convergence}.
+\end{remark}
+
+\subsection{Boundary control}
+
+Boundary control requires a change of norms and function spaces relative to
+internal control (Remark~\ref{rem:boundary-h10}), which in practice makes the
+numerical method more unstable. For a uniform control-point distribution, a
+denser distribution near the endpoints of the control interval may improve
+results \citep{kalimeris2021numerical}.
+
+\begin{remark}[Lack of robustness]
+  Small perturbations in input data can produce widely different numerical
+  results -- a general robustness concern for both control types, not
+  specific to either.
+\end{remark}

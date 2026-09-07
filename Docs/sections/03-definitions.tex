@@ -1,0 +1,67 @@
+\section{Controllability definitions}
+\label{sec:definitions}
+
+These definitions are shared across internal and boundary control -- the
+thesis does not split them, and neither do we. Here $H$ and $U$ are the state
+and control spaces of \eqref{eq:abstract-system}, as fixed in
+Section~\ref{sec:wellposedness}.
+
+\begin{definition}[Controllability notions for \eqref{eq:abstract-system}]
+  \label{def:controllability}
+  Let $T > 0$. System \eqref{eq:abstract-system} is said to be:
+  \begin{enumerate}[label=(\roman*)]
+    \item \textbf{exactly controllable} in time $T$ if, for all
+      $(y_0,y_1)\in H\times H$, there exists $u \in L^2(0,T;U)$ such that the
+      solution satisfies $y(T;y_0,u) = y_1$;
+    \item \textbf{exactly controllable to trajectories} in time $T$ if, for
+      all $(y_0,\hat y_0)\in H\times H$ and $\hat u \in L^2(0,T;U)$, there
+      exists $u \in L^2(0,T;U)$ such that
+      $y(T;y_0,u) = y(T;\hat y_0,\hat u)$;
+    \item \textbf{null controllable} (or exactly controllable to zero) in
+      time $T$ if, for all $y_0 \in H$, there exists $u \in L^2(0,T;U)$ such
+      that $y(T;y_0,u)=0$;
+    \item \textbf{approximately controllable} in time $T$ if, for all
+      $(y_0,y_1)\in H\times H$ and every $\varepsilon>0$, there exists
+      $u \in L^2(0,T;U)$ such that $\|y(T;y_0,u)-y_1\|_H < \varepsilon$.
+  \end{enumerate}
+\end{definition}
+
+Equivalently, defining the reachable-set map
+$\Phi: L^2(0,T;U)\to H$, $u \mapsto y(T;y_0,u)$, and its range
+$R(T) = \{y(T;y_0,u): u\in L^2(0,T;U)\} = \Phi\big(L^2(0,T;U)\big) \subset H$,
+the four notions above correspond to
+$R(T)=H$, $R(T) \ni y(T;\hat y_0,\hat u)$ for every choice, $0 \in R(T)$, and
+$R(T)$ dense in $H$, respectively. ($\Phi$ is distinct from the completion
+space $F$ introduced in Remark~\ref{rem:hum-existence} below -- different
+symbol, different role.)
+
+\begin{remark}
+  When there is no restriction on the norm of the initial condition, the
+  properties in Definition~\ref{def:controllability} hold \emph{globally};
+  under such a restriction, controllability holds only \emph{locally}.
+\end{remark}
+
+\subsection*{Steady-state controllability (constrained-problem aside)}
+
+For the constrained/steady-state problem of Section~\ref{sec:constrained-aside}
+the thesis restates controllability more concretely for the
+boundary-controlled equation and adds:
+
+\begin{definition}
+  System \eqref{eq:heat-boundary} is (exactly) controllable to
+  $y_1 \in L^2(\Omega)$ if, for every $y_0 \in L^2(\Omega)$, there exist
+  $T_{y_0}>0$ and $u \in L^2(\Sigma)$ such that the solution satisfies
+  $y(T_{y_0}) = y_1$.
+\end{definition}
+
+\begin{definition}[Steady state]
+  $\bar y$ is a steady state of \eqref{eq:heat-boundary} if $-\Delta\bar y = 0$
+  in $\Omega$, $\bar y = \bar u$ on $\partial\Omega$.
+\end{definition}
+
+\begin{definition}[Steady-state controllability]
+  Let $y_0,y_1$ be steady states. System \eqref{eq:heat-boundary} is
+  exactly-steady-state controllable in time $T>0$ if there exists
+  $u \in L^2(\Sigma)$ such that the solution satisfies $y(\cdot,0)=y_0$ and
+  $y(\cdot,T)=y_1$.
+\end{definition}

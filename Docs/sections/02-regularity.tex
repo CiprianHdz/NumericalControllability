@@ -1,0 +1,63 @@
+\section{Regularity of states, controls, and the adjoint state}
+\label{sec:regularity}
+
+The thesis states no separate, numbered "regularity" theorem for the
+HUM-optimal control or the state; what follows is what genuinely exists,
+plus (marked explicitly) what is added independently to complete the picture.
+
+\subsection{Internal control}
+
+The adjoint final datum lives in $\varphi_T \in L^2(0,1)$ -- no further
+regularity statement beyond the well-posedness class of
+Section~\ref{ssec:wp-internal} is given.
+
+\subsection{Boundary control}
+
+The boundary case's adjoint final datum lives in a strictly smaller space,
+flagged in the thesis as the key point of departure from the internal case:
+
+\begin{remark}
+  \label{rem:boundary-h10}
+  For boundary control, the adjoint system has final datum
+  $\varphi_T \in H^1_0(0,1)$, rather than $L^2(0,1)$ as in the internal case.
+  This single distinction is the source of the $H^1_0$/$H^{-1}$ machinery
+  needed throughout the boundary theory (Section~\ref{ssec:wp-boundary},
+  Proposition~\ref{prop:transposition}).
+\end{remark}
+
+\subsection{Shared / adjacent}
+
+The construction of higher-regularity controls (Appendix~A.2 of the thesis) is
+technical machinery specific to the \emph{constrained} (state-positivity)
+problem of Section~\ref{sec:constrained-aside}, not a general HUM
+control-regularity result for the unconstrained baseline treated here -- see
+that section for the statement (Proposition~\ref{prop:hidden-regularity}).
+Separately, control regularity for constrained minimal-time controllability is
+addressed in \citet[Thm.~4]{loheac2017minimal}, again in the constrained
+setting rather than the baseline.
+
+\begin{remark}[Gap in the thesis, now filled independently -- not from the
+  thesis]
+  \label{rem:smoothing}
+  No parabolic-smoothing theorem is stated in the thesis, though it is
+  implicit in $D(A) = H^2(\Omega)\cap H^1_0(\Omega)$. Since $A=-\Delta$
+  generates an analytic semigroup $(e^{-tA})_{t\ge0}$ on $L^2(\Omega)$
+  \citep{pazy2012semigroups}, the uncontrolled solution satisfies the standard
+  regularizing effect
+  \[
+    y_0 \in L^2(\Omega) \ \Longrightarrow\
+    y(t) \in D(A) \subset H^1_0(\Omega)\cap H^2(\Omega) \ \text{for every } t>0,
+    \qquad \|y(t)\|_{D(A)} \le \frac{C}{t}\|y_0\|_{L^2(\Omega)}.
+  \]
+  As with Remark~\ref{rem:energy-wellposedness}, this citation is the same
+  book already used for the abstract semigroup framework, and this specific
+  statement was not checked page-by-page against it.
+\end{remark}
+
+\begin{remark}
+  The finite-dimensional Kalman-condition/observability machinery underlying
+  \emph{discrete} uniform controllability (Section~\ref{sec:discrete}) is a
+  separate notion -- ``regularity of controllability'' for a finite-dimensional
+  ODE system -- distinct from the PDE state/control regularity discussed here,
+  and is deliberately not conflated with it.
+\end{remark}

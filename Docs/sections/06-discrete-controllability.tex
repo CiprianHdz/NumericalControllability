@@ -1,0 +1,191 @@
+\section{Discrete-in-space uniform controllability: the ODE-controllability bridge}
+\label{sec:discrete}
+
+This section covers the theory of \emph{space} semi-discretization -- the
+technique actually used in this work -- and its relation to the
+finite-dimensional (ODE) controllability theory of
+Section~\ref{ssec:ode-prototype}. Internal (distributed) control is treated
+as the primary case; boundary control appears only as a one-line contrast.
+
+\subsection{Framing}
+\label{ssec:discrete-framing}
+
+\begin{quote}
+  \itshape ``A space semi-discrete approximation of the parabolic control
+  problems [\eqref{eq:heat-boundary} or \eqref{eq:heat-internal}] reduces the
+  initial problem to a control problem for an ordinary differential equations
+  (ODE's) system.''
+\end{quote}
+This reduction is the central bridge exploited throughout this section: study
+of the semi-discrete heat equation's controllability becomes an application of
+Theorems~\ref{thm:kalman}--\ref{thm:ode-hum} to a specific, mesh-dependent
+family of linear ODE systems.
+
+The numerical-HUM approach itself originates with the pioneering work of
+\citet{glowinski1990numerical} for the wave equation, treated as an
+unconstrained optimization problem for the adjoint system via convex-duality
+theory \citep{ekeland1999convex}; it was later adapted to the heat equation to
+find null controls by \citet{carthel1994exact}. HUM belongs to a broader
+family of dual methods, including the \emph{weighted} HUM, which incorporates
+a small perturbation to damp oscillatory control behavior
+\citep{zuazua2006control}; more recently, primal methods working directly
+with the primal system via Carleman weights \citep{fernandez2014numerical}
+and least-squares/variational methods \citep{munch2014numerical} have given
+results broadly comparable to the dual approach.
+
+Discrete controllability of parabolic problems is usually studied via three
+formulations -- time-discrete, space-discrete, and fully discrete
+\citep{boyer2020carleman}. Uniform controllability (defined precisely in
+Definition~\ref{def:uniform-controllability} below) is established
+\emph{only} for the space-discrete formulation of the one-dimensional heat
+equation \citep{zuazua2006control,lopez1998some}; the other two formulations
+are not pursued in this work (see Section~\ref{ssec:other-formulations} for
+why).
+
+\subsection{The space-discrete ODE system}
+\label{ssec:space-discrete-system}
+
+Let $N \in \mathbb{N}$, let $h = L/(N+1)$ be the corresponding uniform mesh
+size on $(0,L)$, $x_j = jh$ for $j=0,\dots,N+1$, and let
+$y_h(t) = (y_1(t),\dots,y_N(t)) \in \R^N$ approximate
+$\big(y(x_1,t),\dots,y(x_N,t)\big)$ via the standard central-difference
+approximation of $\partial_{xx}$. For internal control, \eqref{eq:heat-internal}
+becomes the linear ODE system on $\R^N$
+\begin{equation}
+  \label{eq:discrete-internal}
+  y_h'(t) = A_h y_h(t) + B_h v_h(t), \qquad
+  A_h = \frac{\alpha}{h^2}
+  \begin{pmatrix}
+    -2 & 1 & & \\
+    1 & -2 & 1 & \\
+    & \ddots & \ddots & \ddots \\
+    & & 1 & -2
+  \end{pmatrix} \in \R^{N\times N},
+\end{equation}
+where $v_h(t) \in \R^N$ and $B_h = \mathbf{1}_{\omega_h} \in \R^{N\times N}$ is
+the diagonal matrix with $(\mathbf{1}_{\omega_h})_{jj}=1$ if $x_j \in \omega$
+and $0$ otherwise (the identity matrix if $\omega$ is the whole domain). For
+boundary control, the analogous system \citep[cf.][]{leveque2007finite} has
+the same $A_h \in \R^{N\times N}$ but $v_h(t) \in \R$ a scalar and
+$B_h \in \R^{N\times 1}$ a column vector, rather than $v_h(t) \in \R^N$ and
+$B_h \in \R^{N\times N}$ as in \eqref{eq:discrete-internal}.
+
+\begin{proposition}[Spectrum of $A_h$]
+  \label{prop:spectrum}
+  $A_h$ has eigenvalues
+  $\lambda_j = \dfrac{2\alpha}{h^2}\big(1-\cos(j\pi h)\big)$, $j=1,\dots,N$,
+  with eigenvectors $e^j_i = \sin(ij\pi h)$, $i=1,\dots,N$
+  \citep[\S3.4]{leveque2007finite}.
+\end{proposition}
+
+This explicit, closed-form spectrum is precisely what makes the uniform
+controllability results below tractable: the proof of
+Theorem~\ref{thm:discrete-null-control} "relies solely on the fact that the
+spectrum of the Laplacian can be computed explicitly."
+
+\subsection{Uniform controllability}
+\label{ssec:uniform-controllability}
+
+\begin{definition}[Uniform controllability]
+  \label{def:uniform-controllability}
+  Controllability properties must be established via an observability
+  inequality for the discrete adjoint system, rather than by directly
+  invoking the Kalman rank condition, since the latter is a
+  \textbf{qualitative, binary} criterion for a fixed finite-dimensional
+  system: it says nothing about how the observability constant behaves as the
+  system size grows with $h \to 0$. System \eqref{eq:discrete-internal} (resp.\
+  its boundary analogue) is said to be \textbf{uniformly controllable with
+  respect to $h$} if the discrete observability inequality below holds for a
+  suitable constant $C>0$ \emph{independent of $h$}.
+\end{definition}
+
+The discrete adjoint system, with $\varphi_h(t) \in \R^N$, is
+\begin{equation}
+  \label{eq:discrete-adjoint}
+  \varphi_h'(t) = -A_h^\top\varphi_h(t) \ \text{in } (0,T), \qquad
+  \varphi_h(T) = \varphi_h^T \in \R^N.
+\end{equation}
+
+\begin{theorem}[Discrete observability inequality]
+  \label{thm:discrete-observability}
+  For every $T>0$ there is $C(T)>0$ such that
+  \[
+    h\sum_{j=1}^N |\varphi_j(0)|^2 \le C \int_0^T \left|\frac{\varphi_N(t)}{h}\right|^2 dt
+  \]
+  for every solution $\varphi_h$ of \eqref{eq:discrete-adjoint} and every
+  $h>0$.
+\end{theorem}
+\begin{proof}[Source]
+  \citet{lopez1998some}, based on a discrete observability inequality that
+  relies solely on the explicit spectrum of Proposition~\ref{prop:spectrum}.
+\end{proof}
+
+\begin{theorem}[Discrete null controllability and convergence of controls]
+  \label{thm:discrete-null-control}
+  For any $T>0$ and $y_h^0$, there is a control $v_h \in L^2(0,T)$ steering
+  the solution of \eqref{eq:discrete-internal} (or its boundary analogue) to
+  $y_j(T)=0$, $j=1,\dots,N$. Moreover, for $y^0\in L^2(0,L)$, the controls
+  $v_h$ may be built so that
+  \begin{equation}
+    \label{eq:convergence-controls}
+    v_h \to v \ \text{in } L^2(0,T) \ \text{as } h \to 0,
+  \end{equation}
+  where $v$ is a null control for the continuous heat equation, provided the
+  initial data are chosen appropriately.
+\end{theorem}
+\begin{proof}[Source]
+  \citet{lopez1998some}.
+\end{proof}
+
+\begin{remark}[Extension to internal control]
+  \label{rem:internal-extension}
+  Theorem~\ref{thm:discrete-null-control} -- stated by \citeauthor{lopez1998some}
+  for the boundary case -- can be modified to also give the convergence of the
+  discretization for internal control, system \eqref{eq:discrete-internal}
+  \citep[Rem.~3.4]{zuazua2006control}.
+\end{remark}
+
+\begin{remark}[Scope: only in 1D]
+  \label{rem:1d-only}
+  The uniform property of Definition~\ref{def:uniform-controllability} holds
+  \emph{only for the one-dimensional} heat equation \citep{lopez1998some};
+  convergence \eqref{eq:convergence-controls} follows from an explicit choice
+  of $y^0$ via Fourier series \citep[Rem.~1.2]{lopez1998some}; and $v_h$
+  converges to the minimal-norm HUM control of
+  Section~\ref{ssec:ode-prototype}. In two dimensions, the space semi-discrete
+  heat equation is \textbf{not} controllable at all \citep{zuazua2005propagation}
+  -- a counterexample that is dimension-general, not specific to internal or
+  boundary control, and that directly explains the 1D restriction here.
+  Further references establishing/refining uniform controllability for the
+  space-discrete 1D case, not worked through in detail here, include
+  \citet{labbe2006uniform} and \citet{boyer2010discrete}.
+\end{remark}
+
+\begin{remark}[Gap, not filled: joint $(h,k)$ scaling]
+  \label{rem:hk-gap}
+  Every uniform-controllability result above is for \emph{space}
+  semi-discretization only ($h\to0$, time kept continuous); no joint
+  $(h,k)$-refinement (fully discrete) uniform-controllability theorem is
+  established here. This is the discrete-side counterpart of the open
+  condition-number scaling question already noted after
+  Proposition~\ref{prop:condition-number}: the penalized-HUM condition number
+  $\nu_a = 1+\|\Lambda\|/\varepsilon$ is stated purely as a function of
+  $\varepsilon$, with no established $(h,k)$-refinement scaling law. Both gaps
+  should be read together, and neither should be presented as resolved.
+\end{remark}
+
+\subsection{Other formulations (brief, not pursued here)}
+\label{ssec:other-formulations}
+
+The time-discrete and fully-discrete formulations are noted only for
+completeness, since this work uses space discretization exclusively.
+\textbf{Time-discrete}: this is a genuine \emph{negative} result, not a milder
+version of the space-discrete case above -- the time-semi-discrete
+multi-dimensional heat equation is in general neither null nor approximately
+controllable \citep{zheng2008controllability}, and Carleman estimates for the
+time-discrete operator give only "another sense of controllability"
+\citep{boyer2020carleman}, not the same uniform-observability property.
+\textbf{Fully discrete}: results are scarce; null controllability for a
+family of one-dimensional parabolic equations has been shown via Carleman
+inequalities, again only in a relaxed sense of controllability
+\citep{casanova2021carleman}.

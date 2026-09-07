@@ -16,9 +16,11 @@ venv/
 # OS cruft
 .DS_Store
 
-# Reference PDFs: ignored everywhere except Proposal/
+# Reference PDFs: ignored everywhere except Proposal/ and the compiled
+# Docs/theory.pdf (tracked alongside its .tex/.bib source, by request)
 *.pdf
 !Proposal/*.pdf
+!Docs/theory.pdf
 
 # Cipriano's own thesis LaTeX source — kept on disk for reference, not tracked
 SourceThesis/TesisLaTeXCode/
@@ -27,6 +29,19 @@ SourceThesis/TesisLaTeXCode/
 # historical reference only, not tracked in git
 RawCode/*.py
 RawCode/*.ipynb
+
+# LaTeX build artifacts (Docs/theory.tex) — source (.tex/.bib) is tracked,
+# compiled output and intermediate files are not. Trimmed to exactly what
+# `latexmk -pdf` + bibtex actually produce for this document (verified by a
+# real build) — no speculative extensions for tooling not in use here.
+Docs/*.aux
+Docs/*.bbl
+Docs/*.blg
+Docs/*.fdb_latexmk
+Docs/*.fls
+Docs/*.log
+Docs/*.out
+Docs/*.toc
 
 # Editors
 .vscode/
